@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'auth/login_page.dart';
-import 'auth/register_page.dart';
-import 'auth/home_page.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
+  await Supabase.initialize (
     url: 'https://ksztxqxsylspvicdphzh.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzenR4cXhzeWxzcHZpY2RwaHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTcyOTYsImV4cCI6MjA4ODEzMzI5Nn0.IWntG-60ZINeOY1BoZRhw1iJhCxWlKuUw2JOoaDqezc',
   );
+  
   runApp(const MainApp());
 }
 
@@ -18,13 +15,12 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => const LoginPage(),
-        '/register': (context) => const RegisterPage(),
-        '/home': (context) => const HomePage(),
-      },
+    return const MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text('Hello World!'),
+        ),
+      ),
     );
   }
 }
