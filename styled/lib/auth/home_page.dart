@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+//NavBar
+import 'package:google_nav_bar/google_nav_bar.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -80,6 +82,18 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-    );
+
+
+//Modern Buttons 
+      bottomNavigationBar: GNav(
+        tabs: const [ 
+        GButton(icon: Icons.home),
+         GButton(icon: Icons.checkroom),
+          GButton(icon: Icons.auto_awesome),
+          GButton(icon: Icons.history),
+          GButton(icon: Icons.person),
+        ],
+      ),
+      );
   }
 }
