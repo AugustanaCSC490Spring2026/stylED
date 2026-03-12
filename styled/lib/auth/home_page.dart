@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-//NavBar
-import 'package:google_nav_bar/google_nav_bar.dart';
+
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -84,16 +83,30 @@ class HomePage extends StatelessWidget {
       ),
 
 
-//Modern Buttons 
-      bottomNavigationBar: GNav(
-        tabs: const [ 
-        GButton(icon: Icons.home),
-         GButton(icon: Icons.checkroom),
-          GButton(icon: Icons.auto_awesome),
-          GButton(icon: Icons.history),
-          GButton(icon: Icons.person),
+//Modern Buttons to Navigate App
+      bottomNavigationBar: Container( //wrapped in a container
+       color: Colors.black,
+        child: Padding( //Wrapped in Padding
+        padding: const EdgeInsets.all(8),
+        child: BottomNavigationBar(
+        backgroundColor: Colors.black,
+        selectedItemColor: Colors.grey,
+        unselectedItemColor: Colors.white,
+        
+        onTap: (index){ //Navigating across the different tabs
+          print(index);
+        },
+        type: BottomNavigationBarType.fixed, //Needed for background color to be applied to whole bottom bar and for all items being visibile 
+        items: const [ 
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home',),
+         BottomNavigationBarItem(icon: Icon(Icons.checkroom), label: 'Closet',),
+          BottomNavigationBarItem(icon: Icon(Icons.auto_awesome), label: 'Planner',),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Fit History',),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile',),
         ],
       ),
+      )
+      )
       );
   }
 }
