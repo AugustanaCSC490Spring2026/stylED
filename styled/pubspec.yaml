@@ -16,6 +16,7 @@ dependencies:
 #The following adds the Cupertino icons to your application
 #Use with the CupertinoIcons class for iOs style icons 
   cupertino_icons: ^1.0.2
+  flutter_colorpicker: ^1.1.0
   
 
 
