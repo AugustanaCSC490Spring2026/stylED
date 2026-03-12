@@ -1,4 +1,4 @@
-import 'package:styled/users/user.dart';
+import 'package:styled/users/user_data.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 class UserDatabase {
