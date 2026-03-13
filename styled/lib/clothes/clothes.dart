@@ -5,7 +5,7 @@ class Clothes{
   String color;
   String season;
   int timesWorn;
-  DateTime dateLastWorn;
+  DateTime? dateLastWorn;
 
 
   Clothes({this.itemId,
@@ -14,18 +14,19 @@ class Clothes{
           required this.color,
           required this.season,
           required this.timesWorn,
-          required this.dateLastWorn
+          this.dateLastWorn
    });
 
   factory Clothes.fromMap(Map<String, dynamic> map){
     return Clothes(
-      itemId: map['itemid'] as int,
+      itemId: map['itemId'] as int,
       name: map['name'] as String,
       category: map['category'] as String,
       color: map['color'] as String,
       season: map['season'] as String,
-      timesWorn: map['timesworn'] as int,
-      dateLastWorn: map['datelastworn'] as DateTime,
+      timesWorn: map['timesWorn'] as int,
+      dateLastWorn: map['dateLastWorn'] != null
+        ? DateTime.parse(map['dateLastWorn']) : null, 
     );
   }
   Map<String, dynamic> toMap(){
@@ -34,8 +35,8 @@ class Clothes{
       'category': category,
       'color': color,
       'season': season,
-      'timesworn': timesWorn,
-      'datelastworn': dateLastWorn,
+      'timesWorn': timesWorn,
+      'dateLastWorn': dateLastWorn?.toIso8601String().split('T')[0],
     };
   }
 }

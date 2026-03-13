@@ -76,8 +76,8 @@ class _UploadPageState extends State<UploadPage> {
         'season': selectedSeason,
         'occasion': selectedOccasion,
         'description': descriptionController.text.trim(),
-        'datelastworn': dateLastWorn?.toIso8601String(),
-        'timesworn': 0,
+        'dateLastWorn': dateLastWorn?.toIso8601String().split('T')[0],
+        'timesWorn': 0,
         'image_url': imageUrl,
         'collection_only': collectionOnly,
       });
