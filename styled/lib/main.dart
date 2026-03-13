@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth/splash_screen.dart';
 import 'auth/login_page.dart';
 import 'auth/register_page.dart';
 import 'auth/home_page.dart';
@@ -19,11 +20,12 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/login',
+      initialRoute: '/splashscreen',
       routes: {
+         '/splashscreen': (context) => const SplashScreen (),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
-        '/home': (context) => const HomePage(),
+        '/home': (context) => const HomePage (),
       },
     );
   }

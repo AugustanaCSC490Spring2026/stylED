@@ -35,6 +35,9 @@ class _HomePageState extends State<HomePage> {
           onTap: (index) => setState(() => _currentIndex = index),
           type: BottomNavigationBarType.fixed,
           items: const [
+
+            //Components of NavBar: home, closet, history, profile icons
+
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.checkroom), label: 'Closet'),
             BottomNavigationBarItem(icon: Icon(Icons.auto_awesome), label: 'Planner'),

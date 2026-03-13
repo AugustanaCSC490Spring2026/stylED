@@ -24,9 +24,8 @@ class Clothes{
       category: map['category'] as String,
       color: map['color'] as String,
       season: map['season'] as String,
-      timesWorn: map['timesWorn'] as int,
-      dateLastWorn: map['dateLastWorn'] != null
-        ? DateTime.parse(map['dateLastWorn']) : null, 
+      timesWorn: map['timesworn'] as int,
+      dateLastWorn: map['datelastworn'] as DateTime,
     );
   }
   Map<String, dynamic> toMap(){
