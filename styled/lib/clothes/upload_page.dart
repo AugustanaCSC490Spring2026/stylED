@@ -59,7 +59,7 @@ class _UploadPageState extends State<UploadPage> {
       // Upload image if selected
       if (_imageFile != null) {
         final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-        final path = 'upload/$fileName';
+        final path = 'upload/$fileName.jpg';
         await Supabase.instance.client.storage
             .from('images')
             .upload(path, _imageFile!);

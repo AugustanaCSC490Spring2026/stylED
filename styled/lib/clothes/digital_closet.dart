@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'upload_page.dart';
-import '../clothes/digital_closet.dart';
+//import '../clothes/digital_closet.dart';
 
 class DigitalCloset extends StatefulWidget {
   const DigitalCloset({super.key});
@@ -40,6 +40,16 @@ class _DigitalClosetState extends State<DigitalCloset> {
       });
     } catch (e) {
       setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> deleteItem(int itemId) async {
+    try {
+      await Supabase.instance.client.from('clothes').delete().eq('itemid', itemId);
+
+      fetchItems();
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -251,13 +261,48 @@ class _DigitalClosetState extends State<DigitalCloset> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item['name'] ?? '',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Color(0xFF1a1a2e),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded (
+                      child: Text(
+                        item['name'] ?? '',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFF1a1a2e),
+                        ),
+                       ),
+                     ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete, 
+                          size: 18, 
+                          color: Colors.red),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Item'),
+                            content: const Text('Are you sure you want to delete this item?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    deleteItem(item['itemid']);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 6),
                 Row(
