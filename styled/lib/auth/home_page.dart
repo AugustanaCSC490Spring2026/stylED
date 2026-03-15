@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../clothes/digital_closet.dart';
 import '../users/user_page.dart'; 
+import '../history/history_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,7 +18,7 @@ class _HomePageState extends State<HomePage> {
     const _HomeContent(),
     const DigitalCloset(),
     const Center(child: Text('Planner - Coming Soon')),
-    const Center(child: Text('History - Coming Soon')),
+    const HistoryPage(),
     const ProfilePage(), 
   ];
 
