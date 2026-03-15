@@ -46,7 +46,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
 
   Future<void> deleteItem(int itemId) async {
     try {
-      await Supabase.instance.client.from('clothes').delete().eq('itemid', itemId);
+      await Supabase.instance.client.from('clothes').delete().eq('itemId', itemId);
 
       fetchItems();
     } catch (e) {
@@ -293,7 +293,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    deleteItem(item['itemid']);
+                                    deleteItem(item['itemId']);
                                     Navigator.pop(context);
                                   },
                                   child: const Text('Delete'),
