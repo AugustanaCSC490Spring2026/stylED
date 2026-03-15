@@ -28,20 +28,21 @@ class _DigitalClosetState extends State<DigitalCloset> {
   }
 
   Future<void> fetchItems() async {
-    setState(() => isLoading = true);
-    try {
-      final data = await Supabase.instance.client
-          .from('clothes')
-          .select()
-          .order('itemid', ascending: false);
-      setState(() {
-        allItems = List<Map<String, dynamic>>.from(data);
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() => isLoading = false);
-    }
+  setState(() => isLoading = true);
+  try {
+    final data = await Supabase.instance.client
+        .from('clothes')
+        .select()
+        .order('itemId', ascending: false);
+    setState(() {
+      allItems = List<Map<String, dynamic>>.from(data);
+      isLoading = false;
+    });
+  } catch (e) {
+    debugPrint('Error: $e');
+    setState(() => isLoading = false);
   }
+}
 
   Future<void> deleteItem(int itemId) async {
     try {
