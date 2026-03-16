@@ -309,21 +309,35 @@ final List<Map<String, dynamic>> allColors = [
               const SizedBox(height: 8),
               ...allColors.map((item){
                 final isSelected = selectedColorNames.contains(item['name']);
-                return CheckboxListTile(
-                  value: isSelected, 
-                  title: Text(item['name']), 
-                  activeColor: const Color(0xFF2D3561), 
-                  onChanged: (_) => setState(() {
-                    if (isSelected){
+                return Column(
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Checkbox(
+                        value: isSelected,
+                        activeColor: const Color(0xFF2D3561),
+                        onChanged: (_) => setState(() {
+                          if (isSelected){
                       selectedColorNames.remove(item['name']); // if box already check, this will unckeck it 
                     } else {
                       selectedColorNames.add(item['name']); //if box if not checked, this will check it 
                     }
-                  }),
-                  );
+                        }),
+                    ),
+                    title: Text(item['name']),
+                    trailing: CircleAvatar( //Circle avatar is a flutter widget that draws a filled circle
+                      backgroundColor: item['color'] as Color, //the color comes from the value defined in the allCOlors list
+                      radius: 14
+                    ),
+              
+                  ),
+                    
+                  
+                  const Divider (height: 1),
+                  ],
+                );
               }),
 
-              const SizedBox(height: 20),
 
               
               // Season
