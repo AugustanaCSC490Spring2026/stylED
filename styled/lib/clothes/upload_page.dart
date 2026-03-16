@@ -17,6 +17,7 @@ class _UploadPageState extends State<UploadPage> {
   final descriptionController = TextEditingController();
   String? selectedType;
   Color selectedColor = Colors.blue;
+  Set<String> selectedColorNames = {}; //For the color selection tab, multiple can be selected
   String selectedSeason = 'All Seasons';
   String selectedOccasion = 'Formal';
   DateTime? dateLastWorn;
@@ -26,14 +27,37 @@ class _UploadPageState extends State<UploadPage> {
   final List<String> types = ['Tops','Bottoms','Outerwear','Shoes','Accessories','Dresses',];
   final List<String> seasons = ['All Seasons','Winter','Summer','Fall','Spring',];
   final List<String> occasions = ['Formal', 'Casual', 'Athletic'];
-  final List<Color> colors = [
-    Colors.blue,
-    Colors.red,
-    Colors.green,
-    Colors.black,
-    Colors.white,
+  // final List<Color> colors = [
+  //   Colors.blue,
+  //   Colors.red,
+  //   Colors.green,
+  //   Colors.black,
+  //   Colors.white,
+  // ];
+  // final List<String> colorNames = ['Blue', 'Red', 'Green', 'Black', 'White'];
+
+//Color Options
+//Based on the target.com color filter
+final List<Map<String, dynamic>> allColors = [
+  {'name':'Beige', 'color': const Color(0xFFF5F5DC)},
+  {'name':'Black', 'color': Colors.black},
+  {'name':'Blue', 'color': Colors.blue},
+  {'name':'Brown', 'color': Colors.brown},
+  {'name':'Clear', 'color': Colors.white},
+  {'name':'Gold', 'color': const Color.fromARGB(255, 191, 162, 0)},
+  {'name':'Gray', 'color': const Color.fromARGB(255, 141, 141, 133)},
+  {'name':'Green', 'color': Colors.green},
+  {'name':'Multicolored', 'color': const Color(0xFFF4F4DC)},
+  {'name':'Off-white', 'color': const Color(0xFFF5F5DC)},
+  {'name':'Orange', 'color': Colors.orange},
+  {'name':'Pink', 'color': Colors.pink},
+  {'name':'Purple', 'color': Colors.purple},
+  {'name':'Red', 'color': Colors.red},
+  {'name':'Silver', 'color': const Color.fromARGB(255, 75, 75, 62)},
+  {'name':'White', 'color': Colors.white},
+  {'name':'Yellow', 'color': Colors.yellow},
   ];
-  final List<String> colorNames = ['Blue', 'Red', 'Green', 'Black', 'White'];
+
 
   Future<void> pickImage() async {
     final picker = ImagePicker();
@@ -72,7 +96,7 @@ class _UploadPageState extends State<UploadPage> {
       await Supabase.instance.client.from('clothes').insert({
         'name': nameController.text.trim(),
         'category': selectedType,
-        'color': selectedColor.value.toRadixString(16),
+        'color': selectedColorNames.join(', '), //Convert the set/list of colors into a string
         'season': selectedSeason,
         'occasion': selectedOccasion,
         'description': descriptionController.text.trim(),
@@ -221,59 +245,81 @@ class _UploadPageState extends State<UploadPage> {
               ),
               const SizedBox(height: 20),
 
-              // Color
-              _label('Color'),
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Pick a color'),
-                      content: SingleChildScrollView(
-                        child: ColorPicker(
-                          pickerColor: selectedColor,
-                          onColorChanged: (color) =>
-                              setState(() => selectedColor = color),
-                          enableAlpha: false,
-                          labelTypes: const [],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'Done',
-                            style: TextStyle(color: Color(0xFF2d3561)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: selectedColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Tap to pick color',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
+              // // Color
+              // _label('Color'),
+              // const SizedBox(height: 12),
+              // GestureDetector(
+              //   onTap: () {
+              //     showDialog(
+              //       context: context,
+              //       builder: (context) => AlertDialog(
+              //         title: const Text('Pick a color'),
+              //         content: SingleChildScrollView(
+              //           child: ColorPicker(
+              //             pickerColor: selectedColor,
+              //             onColorChanged: (color) =>
+              //                 setState(() => selectedColor = color),
+              //             enableAlpha: false,
+              //             labelTypes: const [],
+              //           ),
+              //         ),
+              //         actions: [
+              //           TextButton(
+              //             onPressed: () => Navigator.pop(context),
+              //             child: const Text(
+              //               'Done',
+              //               style: TextStyle(color: Color(0xFF2d3561)),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     );
+              //   },
+              //   child: Row(
+              //     children: [
+              //       Container(
+              //         width: 44,
+              //         height: 44,
+              //         decoration: BoxDecoration(
+              //           color: selectedColor,
+              //           shape: BoxShape.circle,
+              //           border: Border.all(
+              //             color: Colors.grey.shade300,
+              //             width: 2,
+              //           ),
+              //         ),
+              //       ),
+              //       const SizedBox(width: 12),
+              //       const Text(
+              //         'Tap to pick color',
+              //         style: TextStyle(color: Colors.grey),
+              //       ),
+              //     ],
+              //   ),
+              // ),
 
+              //Color Widget
+              _label('Color'),
+              const SizedBox(height: 8),
+              ...allColors.map((item){
+                final isSelected = selectedColorNames.contains(item['name']);
+                return CheckboxListTile(
+                  value: isSelected, 
+                  title: Text(item['name']), 
+                  activeColor: const Color(0xFF2D3561), 
+                  onChanged: (_) => setState(() {
+                    if (isSelected){
+                      selectedColorNames.remove(item['name']); // if box already check, this will unckeck it 
+                    } else {
+                      selectedColorNames.add(item['name']); //if box if not checked, this will check it 
+                    }
+                  }),
+                  );
+              }),
+
+              const SizedBox(height: 20),
+
+              
               // Season
               _label('Season'),
               const SizedBox(height: 10),
