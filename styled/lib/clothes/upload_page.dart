@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'dart:typed_data';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -12,7 +13,7 @@ class UploadPage extends StatefulWidget {
 }
 
 class _UploadPageState extends State<UploadPage> {
-  File? _imageFile;
+  Uint8List? _imageBytes;
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
   String? selectedType;
@@ -39,7 +40,12 @@ class _UploadPageState extends State<UploadPage> {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      setState(() => _imageFile = File(image.path));
+      final bytes = await image.readAsBytes();
+
+      setState(() {
+        _imageBytes = bytes;
+      });
+     // setState(() => _imageFile = File(image.path));
     }
   }
 
@@ -57,12 +63,12 @@ class _UploadPageState extends State<UploadPage> {
       String? imageUrl;
 
       // Upload image if selected
-      if (_imageFile != null) {
+      if (_imageBytes != null) {
         final fileName = DateTime.now().millisecondsSinceEpoch.toString();
         final path = 'upload/$fileName.jpg';
         await Supabase.instance.client.storage
             .from('images')
-            .upload(path, _imageFile!);
+            .uploadBinary(path, _imageBytes!);
         imageUrl = Supabase.instance.client.storage
             .from('images')
             .getPublicUrl(path);
@@ -139,10 +145,10 @@ class _UploadPageState extends State<UploadPage> {
                       width: 1.5,
                     ),
                   ),
-                  child: _imageFile != null
+                  child: _imageBytes != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Image.file(_imageFile!, fit: BoxFit.cover),
+                          child: Image.memory(_imageBytes!, fit: BoxFit.cover),
                         )
                       : const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
