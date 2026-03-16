@@ -313,12 +313,12 @@ final List<Map<String, dynamic>> allColors = [
                   children: [
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Checkbox(
+                      leading: Checkbox( //select color when little box is pressed on color selector
                         value: isSelected,
                         activeColor: const Color(0xFF2D3561),
                         onChanged: (_) => setState(() {
                           if (isSelected){
-                      selectedColorNames.remove(item['name']); // if box already check, this will unckeck it 
+                      selectedColorNames.remove(item['name']); // if box already checked, this will unckeck it 
                     } else {
                       selectedColorNames.add(item['name']); //if box if not checked, this will check it 
                     }
@@ -329,6 +329,14 @@ final List<Map<String, dynamic>> allColors = [
                       backgroundColor: item['color'] as Color, //the color comes from the value defined in the allCOlors list
                       radius: 14
                     ),
+
+                    onTap: () => setState(() { //select color when tapping anywhere on that specific row
+                      if (isSelected) {
+                        selectedColorNames.remove(item['name']);
+                      } else{
+                        selectedColorNames.add(item['name']);
+                      }
+                    }),
               
                   ),
                     
