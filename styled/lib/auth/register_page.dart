@@ -12,13 +12,16 @@ class _RegisterPageState extends State<RegisterPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  bool showPassword = false;
+  bool showConfirmPassword = false;
   bool isLoading = false;
 
   Future<void> signUp() async {
-    if (passwordController.text.trim() != confirmPasswordController.text.trim()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match!')),
-      );
+    if (passwordController.text.trim() !=
+        confirmPasswordController.text.trim()) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match!')));
       return;
     }
     setState(() => isLoading = true);
@@ -34,9 +37,9 @@ class _RegisterPageState extends State<RegisterPage> {
         Navigator.pushReplacementNamed(context, '/login');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
     setState(() => isLoading = false);
   }
@@ -92,7 +95,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 decoration: InputDecoration(
                   hintText: 'sarah@example.com',
                   hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.mail_outline, color: Colors.grey),
+                  prefixIcon: const Icon(
+                    Icons.mail_outline,
+                    color: Colors.grey,
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF0F2F5),
                   border: OutlineInputBorder(
@@ -115,11 +121,22 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 8),
               TextField(
                 controller: passwordController,
-                obscureText: true,
+                obscureText: !showPassword,
                 decoration: InputDecoration(
                   hintText: '••••••••',
                   hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.grey,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      showPassword ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () =>
+                        setState(() => showPassword = !showPassword),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF0F2F5),
                   border: OutlineInputBorder(
@@ -142,11 +159,25 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 8),
               TextField(
                 controller: confirmPasswordController,
-                obscureText: true,
+                obscureText: !showConfirmPassword,
                 decoration: InputDecoration(
                   hintText: '••••••••',
                   hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.grey,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      showConfirmPassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () => setState(
+                      () => showConfirmPassword = !showConfirmPassword,
+                    ),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF0F2F5),
                   border: OutlineInputBorder(
