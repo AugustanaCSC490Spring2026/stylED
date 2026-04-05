@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:styled/users/user_database.dart';
+import 'package:styled/users/user_data.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -9,6 +11,8 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final nameController = TextEditingController();
+  final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -36,6 +40,15 @@ class _RegisterPageState extends State<RegisterPage> {
         );
         Navigator.pushReplacementNamed(context, '/login');
       }
+      UserData newUser = UserData(
+        name: nameController.text.trim(),
+        username: usernameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+      await UserDatabase().createUser(
+        newUser
+      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -109,6 +122,33 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 20),
 
+              const Text(
+                'Username',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: Color(0xFF1a1a2e),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: usernameController,
+                decoration: InputDecoration(
+                  hintText: 'stylish_sarah',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: Colors.grey,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF0F2F5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              
               // Password
               const Text(
                 'Password',
