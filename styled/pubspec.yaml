@@ -14,7 +14,7 @@ dependencies:
   google_fonts: ^6.2.1 #Google fonts for letters
   cupertino_icons: ^1.0.2 #The following adds the Cupertino icons to your application, Use with the CupertinoIcons class for iOs style icons 
   flutter_colorpicker: ^1.1.0 
-
+  fl_chart: ^1.2.0
 
 flutter:
   uses-material-design: true
