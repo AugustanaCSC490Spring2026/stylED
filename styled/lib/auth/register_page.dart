@@ -40,15 +40,6 @@ class _RegisterPageState extends State<RegisterPage> {
         );
         Navigator.pushReplacementNamed(context, '/login');
       }
-      UserData newUser = UserData(
-        name: nameController.text.trim(),
-        username: usernameController.text.trim(),
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-      await UserDatabase().createUser(
-        newUser
-      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,
