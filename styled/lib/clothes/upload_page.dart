@@ -325,7 +325,7 @@ final List<Map<String, dynamic>> allColors = [
                         }),
                     ),
                     title: Text(item['name']),
-                    trailing: Container(
+                    trailing: Container( //color icons black border
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
@@ -333,9 +333,9 @@ final List<Map<String, dynamic>> allColors = [
                           width: 2
                         )
                       ),
-                      child: CircleAvatar(
+                      child: CircleAvatar( //multicolored icon imported jpeg
                         radius: 14,
-                        backgroundColor: item['name'] == 'Multicolored'
+                        backgroundColor: item['name'] == 'Multicolored' 
                         ? Colors.transparent
                         : item['color'] as Color,
                         backgroundImage: item['name'] == 'Multicolored'

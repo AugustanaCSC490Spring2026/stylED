@@ -54,7 +54,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
     }
   }
 
-  List<Map<String, dynamic>> get filteredItems {
+  List<Map<String, dynamic>> get filteredItems { //filters in gallery
     return allItems.where((item) {
       final matchesSearch = item['name']
               ?.toString()
@@ -62,7 +62,27 @@ class _DigitalClosetState extends State<DigitalCloset> {
               .contains(searchQuery.toLowerCase()) ??
           true;
       return matchesSearch;
+
     }).toList();
+  }
+
+  void openBottomSheet(String filter){ //filters' options 
+    showModalBottomSheet(
+      context: context, 
+      builder: (BuildContext context) {
+        return SizedBox(
+          height: 400,
+          child: Center(
+            child: ElevatedButton(
+              child: const Text('Close'),
+              onPressed: () => Navigator.pop(context),
+
+            )
+            
+            )
+        );
+      },
+      );
   }
 
   @override
@@ -135,9 +155,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
                     final filter = filters[index];
                     final isSelected = selectedFilter == filter;
                     return GestureDetector(
-                      onTap: () => setState(() {
+                      onTap: () {
+                        setState(() {
                         selectedFilter = isSelected ? null : filter;
-                      }),
+                      });
+                      if (!isSelected) {
+                        openBottomSheet(filter); //actually opens the bottom sheet of a filter chip that isn't already active
+                      }
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
