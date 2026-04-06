@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -13,6 +14,9 @@ class _HistoryPageState extends State<HistoryPage> {
   int _totalItems = 0;
   int _wornItems = 0;
   List<Map<String, dynamic>> _mostWornItems = [];
+
+  // summary data for clothes type
+  Map<String, int> _categoryBreakdown = {};
 
   final List<String> _filters = ['All', 'Casual', 'Formal', 'Athletic'];
 
@@ -32,6 +36,7 @@ class _HistoryPageState extends State<HistoryPage> {
             .eq('user_id', user.id);
 
         final items = response as List;
+
         final worn = items.where((item) => item['date_last_worn'] != null).toList();
 
         // Sort by times worn or just show items with names
@@ -42,15 +47,25 @@ class _HistoryPageState extends State<HistoryPage> {
           };
         }).toList();
 
+        // count of number of clothes type in each category
+        final Map<String, int> breakdown = {};
+        
+        for (Map<String, dynamic> item in items) {
+          // if clothes type not listed, then it's stored in 'Other'
+          final cat = (item['category'] as String?) ?? 'Other';
+          breakdown[cat] = (breakdown[cat] ?? 0) + 1;
+        }
+
         setState(() {
           _totalItems = items.length;
           _wornItems = worn.length;
           _mostWornItems = wornWithCount;
+          _categoryBreakdown = breakdown;
         });
       } catch (e) {
         // ignore
       }
-    }
+    } 
   }
 
   int get _notWornPercent {
@@ -190,7 +205,8 @@ class _HistoryPageState extends State<HistoryPage> {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.grey.shade200),
               ),
-              child: _totalItems == 0
+              // if no categories have been loaded yet, then show place holder text, else show the chart
+              child: _categoryBreakdown.isEmpty
                   ? const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 24),
@@ -200,68 +216,70 @@ class _HistoryPageState extends State<HistoryPage> {
                         ),
                       ),
                     )
-                  : Row(
-                      children: [
-                        // Donut chart
-                        SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: CustomPaint(
-                            painter: _DonutChartPainter(
-                              wornPercent: _wornPercent / 100,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF2d3561),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Worn  $_wornPercent%',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF1a1a2e),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade300,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Not Worn  $_notWornPercent%',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF1a1a2e),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-            ),
+                  : _CategoryPieChart(categoryData: _categoryBreakdown),
+                ),
+            //       : Row(
+            //           children: [
+            //             // Donut chart
+            //             SizedBox(
+            //               width: 80,
+            //               height: 80,
+            //               child: CustomPaint(
+            //                 painter: _DonutChartPainter(
+            //                   wornPercent: _wornPercent / 100,
+            //                 ),
+            //               ),
+            //             ),
+            //             const SizedBox(width: 24),
+            //             Column(
+            //               crossAxisAlignment: CrossAxisAlignment.start,
+            //               children: [
+            //                 Row(
+            //                   children: [
+            //                     Container(
+            //                       width: 10,
+            //                       height: 10,
+            //                       decoration: const BoxDecoration(
+            //                         color: Color(0xFF2d3561),
+            //                         shape: BoxShape.circle,
+            //                       ),
+            //                     ),
+            //                     const SizedBox(width: 8),
+            //                     Text(
+            //                       'Worn  $_wornPercent%',
+            //                       style: const TextStyle(
+            //                         fontSize: 13,
+            //                         color: Color(0xFF1a1a2e),
+            //                       ),
+            //                     ),
+            //                   ],
+            //                 ),
+            //                 const SizedBox(height: 8),
+            //                 Row(
+            //                   children: [
+            //                     Container(
+            //                       width: 10,
+            //                       height: 10,
+            //                       decoration: BoxDecoration(
+            //                         color: Colors.grey.shade300,
+            //                         shape: BoxShape.circle,
+            //                       ),
+            //                     ),
+            //                     const SizedBox(width: 8),
+            //                     Text(
+            //                       'Not Worn  $_notWornPercent%',
+            //                       style: const TextStyle(
+            //                         fontSize: 13,
+            //                         color: Color(0xFF1a1a2e),
+            //                       ),
+            //                     ),
+            //                   ],
+            //                 ),
+            //               ],
+            //             ),
+            //           ],
+            //         ),
+            // ),
 
             const SizedBox(height: 16),
 
@@ -361,43 +379,159 @@ class _BarChart extends StatelessWidget {
   }
 }
 
-class _DonutChartPainter extends CustomPainter {
-  final double wornPercent;
+// Pie chart of clothing categories
+class _CategoryPieChart extends StatefulWidget {
+  final Map<String, int> categoryData;
 
-  _DonutChartPainter({required this.wornPercent});
+  const _CategoryPieChart({required this.categoryData});
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 8;
-    const strokeWidth = 12.0;
+  State<_CategoryPieChart> createState() => _CategoryPieChartState();
+}
 
-    final bgPaint = Paint()
-      ..color = Colors.grey.shade200
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+class _CategoryPieChartState extends State<_CategoryPieChart> {
+  int touchedIndex = -1;
 
-    final fgPaint = Paint()
-      ..color = const Color(0xFF2d3561)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+  static const List<Color> _colors = [
+    Color(0xFF2d3561),
+    Color(0xFFEF9F27),
+    Color(0xFF9C27B0),
+    Color(0xFF4CAF50),
+    Color(0xFFE91E63),
+    Color(0xFF00BCD4),
+  ];
 
-    canvas.drawCircle(center, radius, bgPaint);
+  @override 
+  Widget build(BuildContext context) {
+    // convert map -> list
+    final categories = widget.categoryData.entries.toList();
 
-    const startAngle = -1.5708;
-    final sweepAngle = 2 * 3.14159 * wornPercent;
+    // total items overall
+    final total = categories.fold(0, (sum, e) => sum + e.value);
 
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweepAngle,
-      false,
-      fgPaint,
+    return AspectRatio(
+      aspectRatio: 1.3,
+      child: Row(
+        children: [
+          // pie chart
+          Expanded(
+            child: PieChart(
+              PieChartData(
+                pieTouchData: PieTouchData(
+                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    setState(() {
+                      if (!event.isInterestedForInteractions || pieTouchResponse == null || 
+                      pieTouchResponse.touchedSection == null) {
+                        touchedIndex = -1;
+                        return;
+                      }
+                      touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                    });
+                  },
+                ),
+                borderData: FlBorderData(show: false),
+                sectionsSpace: 2,
+                centerSpaceRadius: 40,
+                sections: categories.asMap().entries.map((e) {
+                  final i = e.key;
+                  final entry = e.value;
+                  final isTouched = i == touchedIndex;
+                  final percent = (entry.value / total * 100).round();
+
+                  return PieChartSectionData(
+                    color: _colors[i % _colors.length],
+                    value: entry.value.toDouble(),
+                    title: '$percent%',
+                    // tapped slices grow bigger
+                    radius: isTouched ? 60.0 : 50.0,
+                    titleStyle: TextStyle(
+                      fontSize: isTouched ? 16.0 : 12.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: const [Shadow(color: Colors.black, blurRadius: 2)],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          // pie chart legend
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: categories.asMap().entries.map((e) {
+              final i = e.key;
+              final entry = e.value;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: _colors[i % _colors.length],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width:8),
+                    // category name
+                    Text(
+                      entry.key,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF1a1a2e),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
     );
   }
+}
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-} 
+// class _DonutChartPainter extends CustomPainter {
+//   final double wornPercent;
+
+//   _DonutChartPainter({required this.wornPercent});
+
+//   @override
+//   void paint(Canvas canvas, Size size) {
+//     final center = Offset(size.width / 2, size.height / 2);
+//     final radius = size.width / 2 - 8;
+//     const strokeWidth = 12.0;
+
+//     final bgPaint = Paint()
+//       ..color = Colors.grey.shade200
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = strokeWidth
+//       ..strokeCap = StrokeCap.round;
+
+//     final fgPaint = Paint()
+//       ..color = const Color(0xFF2d3561)
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = strokeWidth
+//       ..strokeCap = StrokeCap.round;
+
+//     canvas.drawCircle(center, radius, bgPaint);
+
+//     const startAngle = -1.5708;
+//     final sweepAngle = 2 * 3.14159 * wornPercent;
+
+//     canvas.drawArc(
+//       Rect.fromCircle(center: center, radius: radius),
+//       startAngle,
+//       sweepAngle,
+//       false,
+//       fgPaint,
+//     );
+//   }
+
+//   @override
+//   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+// } 
