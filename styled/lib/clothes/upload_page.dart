@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'dart:typed_data';
+import 'package:styled/auth/login_page.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -18,7 +18,7 @@ class _UploadPageState extends State<UploadPage> {
   final descriptionController = TextEditingController();
   String? selectedType;
   Color selectedColor = Colors.blue;
-  Set<String> selectedColorNames = {}; //For the color selection tab, multiple can be selected
+  Set<String> selectedColorNames = {};
   String selectedSeason = 'All Seasons';
   String selectedOccasion = 'Formal';
   DateTime? dateLastWorn;
@@ -37,9 +37,7 @@ class _UploadPageState extends State<UploadPage> {
   // ];
   // final List<String> colorNames = ['Blue', 'Red', 'Green', 'Black', 'White'];
 
-//Color Options
-//Based on the target.com color filter
-final List<Map<String, dynamic>> allColors = [
+  final List<Map<String, dynamic>> allColors = [
   {'name':'Beige', 'color': const Color(0xFFE8D8B5)},
   {'name':'Black', 'color': Colors.black},
   {'name':'Blue', 'color': Colors.blue},
@@ -59,13 +57,11 @@ final List<Map<String, dynamic>> allColors = [
   {'name':'Yellow', 'color': Colors.yellow},
   ];
 
-
   Future<void> pickImage() async {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       final bytes = await image.readAsBytes();
-
       setState(() {
         _imageBytes = bytes;
       });
@@ -84,6 +80,16 @@ final List<Map<String, dynamic>> allColors = [
     setState(() => isLoading = true);
 
     try {
+      final userId = UserHolder.id;
+
+      if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in yet.')),
+      );
+      setState(() => isLoading = false);
+      return;
+    }
+
       String? imageUrl;
 
       // Upload image if selected
@@ -98,11 +104,12 @@ final List<Map<String, dynamic>> allColors = [
             .getPublicUrl(path);
       }
 
+
       // Save to clothes table
       await Supabase.instance.client.from('clothes').insert({
         'name': nameController.text.trim(),
         'category': selectedType,
-        'color': selectedColorNames.join(', '), //Convert the set/list of colors into a string
+        'color': selectedColor.value.toRadixString(16),
         'season': selectedSeason,
         'occasion': selectedOccasion,
         'description': descriptionController.text.trim(),
@@ -110,6 +117,7 @@ final List<Map<String, dynamic>> allColors = [
         'timesWorn': 0,
         'image_url': imageUrl,
         'collection_only': collectionOnly,
+        'profile_id': userId,
       });
 
       if (mounted) {

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../clothes/digital_closet.dart';
 import '../users/user_page.dart'; 
 import '../history/history_page.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -70,6 +71,7 @@ class _HomeContentState extends State<_HomeContent> {
   Future<void> _loadUserData() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
+      final userId = UserHolder.id;
       final email = user.email ?? '';
       setState(() {
         _userName = email.split('@').first;
@@ -78,8 +80,8 @@ class _HomeContentState extends State<_HomeContent> {
       try {
         final response = await Supabase.instance.client
             .from('clothes')
-            .select('id')
-            .eq('user_id', user.id);
+            .select()
+            .eq('profile_id', userId.toString());
         setState(() {
           _totalItems = (response as List).length;
         });

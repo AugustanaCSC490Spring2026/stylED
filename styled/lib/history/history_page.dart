@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:styled/auth/login_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -29,15 +30,16 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _loadData() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
+      final userId = UserHolder.id;
       try {
         final response = await Supabase.instance.client
             .from('clothes')
             .select()
-            .eq('user_id', user.id);
+            .eq('profile_id', userId.toString());
 
         final items = response as List;
 
-        final worn = items.where((item) => item['date_last_worn'] != null).toList();
+        final worn = items.where((item) => item['dateLastWorn'] != null).toList();
 
         // Sort by times worn or just show items with names
         final wornWithCount = worn.take(4).map((item) {

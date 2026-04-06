@@ -9,19 +9,41 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+class UserHolder {
+  static String? id;
+}
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool isLoading = false;
 
+  @override 
+  void initState() {
+    super.initState();
+    // Check if user is already signed in
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      if (session != null) {
+        // User is signed in, navigate to home
+        if (mounted) Navigator.pushReplacementNamed(context, '/home');
+      }
+    });
+  }
+
   Future<void> signIn() async {
     setState(() => isLoading = true);
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      final res = await Supabase.instance.client.auth.signInWithPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      if (mounted) Navigator.pushReplacementNamed(context, '/home');
+
+      final user = res.user;
+      if (user != null){
+        UserHolder.id = user.id;
+      }
+  
+      //if (mounted) Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
