@@ -70,19 +70,76 @@ class _DigitalClosetState extends State<DigitalCloset> {
     showModalBottomSheet(
       context: context, 
       builder: (BuildContext context) {
-        return SizedBox(
+        switch (filter){ //open a different bottomsheet based on the selected filter button
+          case 'Season': 
+          return seasonSheet();
+
+          case 'Occasion':
+          return occasionSheet();
+
+          case 'Color':
+          return colorSheet();
+
+          case 'Type':
+          return typeSheet();
+
+          default: //if none of the four filter options is selected an empty space will be returned
+          return const SizedBox();
+
+
+        }
+        
+      },
+      );
+  }
+
+  Widget seasonSheet(){ //code for individual bottom sheet based on filter option
+    return SizedBox(
           height: 400,
           child: Center(
             child: ElevatedButton(
               child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context)
+            ),
+          ),
+    );
 
-            )
-            
-            )
-        );
-      },
-      );
+  }
+
+  Widget occasionSheet(){
+    return SizedBox(
+          height: 400,
+          child: Center(
+            child: ElevatedButton(
+              child: const Text('Close'),
+              onPressed: () => Navigator.pop(context)
+            ),
+          ),
+    );
+  }
+
+  Widget colorSheet(){
+    return SizedBox(
+          height: 400,
+          child: Center(
+            child: ElevatedButton(
+              child: const Text('Close'),
+              onPressed: () => Navigator.pop(context)
+            ),
+          ),
+    );
+  }
+
+  Widget typeSheet(){
+    return SizedBox(
+          height: 400,
+          child: Center(
+            child: ElevatedButton(
+              child: const Text('Close'),
+              onPressed: () => Navigator.pop(context)
+            ),
+          ),
+    );
   }
 
   @override
