@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../auth/login_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -23,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfileData() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
+      final userId = UserHolder.id;
       final email = user.email ?? '';
       final namePart = email.split('@').first;
       final parts = namePart.split('.');
@@ -36,20 +38,23 @@ class _ProfilePageState extends State<ProfilePage> {
       try {
         final response = await Supabase.instance.client
             .from('clothes')
-            .select('id')
-            .eq('user_id', user.id);
+            .select()
+            .eq('profile_id', userId.toString());
         setState(() {
           _totalItems = (response as List).length;
+          _email = email;
+          _displayName = displayName;
+          _daysActive = days;
         });
       } catch (e) {
         // ignore
       }
 
-      setState(() {
+     /* setState(() {
         _email = email;
         _displayName = displayName;
         _daysActive = days;
-      });
+      }); */
     }
   }
 

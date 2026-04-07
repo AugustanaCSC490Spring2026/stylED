@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'upload_page.dart';
 //import '../clothes/digital_closet.dart';
+import '../auth/login_page.dart';
 
 class DigitalCloset extends StatefulWidget {
   const DigitalCloset({super.key});
@@ -30,9 +31,11 @@ class _DigitalClosetState extends State<DigitalCloset> {
   Future<void> fetchItems() async {
   setState(() => isLoading = true);
   try {
+    final userId = UserHolder.id;
     final data = await Supabase.instance.client
         .from('clothes')
         .select()
+        .eq('profile_id', userId.toString())
         .order('itemId', ascending: false);
     setState(() {
       allItems = List<Map<String, dynamic>>.from(data);
@@ -47,7 +50,6 @@ class _DigitalClosetState extends State<DigitalCloset> {
   Future<void> deleteItem(int itemId) async {
     try {
       await Supabase.instance.client.from('clothes').delete().eq('itemId', itemId);
-
       fetchItems();
     } catch (e) {
       print(e);
@@ -62,7 +64,6 @@ class _DigitalClosetState extends State<DigitalCloset> {
               .contains(searchQuery.toLowerCase()) ??
           true;
       return matchesSearch;
-
     }).toList();
   }
 
