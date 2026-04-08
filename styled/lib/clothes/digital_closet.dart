@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'upload_page.dart';
 //import '../clothes/digital_closet.dart';
 import '../auth/login_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 class DigitalCloset extends StatefulWidget {
   const DigitalCloset({super.key});
@@ -308,12 +310,15 @@ String selectedType= 'Tops';
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Title
-              const Text(
-                'My Closet',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1a1a2e),
+              Center(
+                child: Text(
+                  'My Closet',
+                  style: GoogleFonts.rockSalt(
+                    fontStyle: FontStyle.italic,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1a1a2e),
+                  ),
                 ),
               ),
               Text(
