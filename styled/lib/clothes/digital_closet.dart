@@ -1,11 +1,9 @@
 // UI
 import 'package:flutter/material.dart';
+import 'package:styled/auth/login_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'upload_page.dart';
 //import '../clothes/digital_closet.dart';
-import '../auth/login_page.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 
 class DigitalCloset extends StatefulWidget {
   const DigitalCloset({super.key});
@@ -33,12 +31,15 @@ class _DigitalClosetState extends State<DigitalCloset> {
   Future<void> fetchItems() async {
   setState(() => isLoading = true);
   try {
-    final userId = UserHolder.id;
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      setState(() => isLoading = false);
+      return;
+    }
     final data = await Supabase.instance.client
         .from('clothes')
         .select()
-        .eq('profile_id', userId.toString())
-        .order('itemId', ascending: false);
+        .eq('profile_id', userId);
     setState(() {
       allItems = List<Map<String, dynamic>>.from(data);
       isLoading = false;
@@ -52,13 +53,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
   Future<void> deleteItem(int itemId) async {
     try {
       await Supabase.instance.client.from('clothes').delete().eq('itemId', itemId);
+
       fetchItems();
     } catch (e) {
       print(e);
     }
   }
 
-  List<Map<String, dynamic>> get filteredItems { //filters in gallery
+  List<Map<String, dynamic>> get filteredItems {
     return allItems.where((item) {
       final matchesSearch = item['name']
               ?.toString()
@@ -67,236 +69,6 @@ class _DigitalClosetState extends State<DigitalCloset> {
           true;
       return matchesSearch;
     }).toList();
-  }
-
-  void openBottomSheet(String filter){ //filters' options 
-    showModalBottomSheet(
-      context: context, 
-      builder: (BuildContext context) {
-        switch (filter){ //open a different bottomsheet based on the selected filter button
-          case 'Season': 
-          return seasonSheet();
-
-          case 'Occasion':
-          return occasionSheet();
-
-          case 'Color':
-          return colorSheet();
-
-          case 'Type':
-          return typeSheet();
-
-          default: //if none of the four filter options is selected an empty space will be returned
-          return const SizedBox();
-
-
-        }
-        
-      },
-    ).then((_) {
-      setState(() => selectedFilter = null); //when the sheet closes, th filter chip category is also deselected
-    });
-  }
-
-  final List<String> seasons = ['All Seasons','Winter','Summer','Fall','Spring',];
-  String selectedSeason = 'All Seasons';
-
-  Widget seasonSheet(){
-    return StatefulBuilder(
-      builder: (context, setSheetState) { //sheet has its own setState
-    return SizedBox(
-          height: 400,
-          width: double.infinity, //fulll width
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
-            child: ElevatedButton(
-              child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          Column( //have each chip stacked on top of eachother
-          crossAxisAlignment: CrossAxisAlignment.stretch, //makes the chips bigger and centers them
-                children: seasons.map((season) {
-                  final isSelected = selectedSeason == season;
-                  return GestureDetector(
-                    onTap: () => setSheetState(() => selectedSeason = season),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric( //space out each chip 
-                        horizontal: 16, 
-                        vertical: 6
-                        ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF2d3561)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
-                      ),
-                      child: Text(
-                        season,
-                        textAlign: TextAlign.center, //text in each chip is now cented as opposed to being on the left
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF1a1a2e),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-          ),
-                ],
-          ),
-    );
-  }
-    );
-  }
-
-final List<String> occasions = ['Formal', 'Casual', 'Athletic'];
-String selectedOccasion = 'Formal';
-
-    Widget occasionSheet(){
-    return StatefulBuilder(
-      builder: (context, setSheetState) { //sheet has its own setState
-    return SizedBox(
-          height: 400,
-          width: double.infinity, //fulll width
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
-            child: ElevatedButton(
-              child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          Column( //have each chip stacked on top of eachother
-          crossAxisAlignment: CrossAxisAlignment.stretch, //makes the chips bigger and centers them
-                children: occasions.map((occasion) {
-                  final isSelected = selectedOccasion == occasion;
-                  return GestureDetector(
-                    onTap: () => setSheetState(() => selectedOccasion = occasion),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric( //space out each chip 
-                        horizontal: 16, 
-                        vertical: 6
-                        ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF2d3561)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
-                      ),
-                      child: Text(
-                        occasion,
-                        textAlign: TextAlign.center, //text in each chip is now cented as opposed to being on the left
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF1a1a2e),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-          ),
-                ],
-          ),
-    );
-  }
-    );
-  }
-
-  Widget colorSheet(){
-    return SizedBox(
-          height: 400,
-          width: double.infinity, //fulll width
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start ,
-            children: [
-              Padding(padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
-            child: ElevatedButton(
-              child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-            ],
-          ),
-    );
-  }
-
-final List<String> types = ['Tops', 'Bottoms', 'Outwear', 'Shoes', 'Accessories','Dresses'];
-String selectedType= 'Tops';
-
-    Widget typeSheet(){
-    return StatefulBuilder(
-      builder: (context, setSheetState) { //sheet has its own setState
-    return SizedBox(
-          height: 400,
-          width: double.infinity, //fulll width
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
-            child: ElevatedButton(
-              child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          Column( //have each chip stacked on top of eachother
-          crossAxisAlignment: CrossAxisAlignment.stretch, //makes the chips bigger and centers them
-                children: types.map((type) {
-                  final isSelected = selectedType == type;
-                  return GestureDetector(
-                    onTap: () => setSheetState(() => selectedType = type),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric( //space out each chip 
-                        horizontal: 16, 
-                        vertical: 6
-                        ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF2d3561)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
-                      ),
-                      child: Text(
-                        type,
-                        textAlign: TextAlign.center, //text in each chip is now cented as opposed to being on the left
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF1a1a2e),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-          ),
-                ],
-          ),
-    );
-  }
-    );
   }
 
   @override
@@ -310,15 +82,12 @@ String selectedType= 'Tops';
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Title
-              Center(
-                child: Text(
-                  'My Closet',
-                  style: GoogleFonts.rockSalt(
-                    fontStyle: FontStyle.italic,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1a1a2e),
-                  ),
+              const Text(
+                'My Closet',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1a1a2e),
                 ),
               ),
               Text(
@@ -367,19 +136,14 @@ String selectedType= 'Tops';
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: filters.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final filter = filters[index];
                     final isSelected = selectedFilter == filter;
                     return GestureDetector(
-                      onTap: () {
-                        setState(() {
+                      onTap: () => setState(() {
                         selectedFilter = isSelected ? null : filter;
-                      });
-                      if (!isSelected) {
-                        openBottomSheet(filter); //actually opens the bottom sheet of a filter chip that isn't already active
-                      }
-                      },
+                      }),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(

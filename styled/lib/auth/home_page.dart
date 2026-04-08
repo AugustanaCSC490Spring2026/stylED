@@ -4,6 +4,7 @@ import '../clothes/digital_closet.dart';
 import '../users/user_page.dart'; 
 import '../history/history_page.dart';
 import 'login_page.dart';
+import '../outfits/outfit_generator_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +19,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const _HomeContent(),
     const DigitalCloset(),
-    const Center(child: Text('Planner - Coming Soon')),
+    const OutfitGeneratorPage(),
     const HistoryPage(),
     const ProfilePage(), 
   ];
