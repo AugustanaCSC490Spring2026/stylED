@@ -16,6 +16,9 @@ class _HistoryPageState extends State<HistoryPage> {
   int _wornItems = 0;
   List<Map<String, dynamic>> _mostWornItems = [];
 
+  List<FlSpot> _addedPerMonth = [];
+  List<String> _addedDateLabels = [];
+
   // summary data for clothes type
   Map<String, int> _categoryBreakdown = {};
 
@@ -43,7 +46,7 @@ class _HistoryPageState extends State<HistoryPage> {
         //   print('Item: ${item['name']} | createdAt: ${item['createdAt'
         //   ]}');
         // }
-        
+
         final worn = items.where((item) => item['dateLastWorn'] != null).toList();
 
         // Sort by times worn or just show items with names
@@ -225,68 +228,6 @@ class _HistoryPageState extends State<HistoryPage> {
                     )
                   : _CategoryPieChart(categoryData: _categoryBreakdown),
                 ),
-            //       : Row(
-            //           children: [
-            //             // Donut chart
-            //             SizedBox(
-            //               width: 80,
-            //               height: 80,
-            //               child: CustomPaint(
-            //                 painter: _DonutChartPainter(
-            //                   wornPercent: _wornPercent / 100,
-            //                 ),
-            //               ),
-            //             ),
-            //             const SizedBox(width: 24),
-            //             Column(
-            //               crossAxisAlignment: CrossAxisAlignment.start,
-            //               children: [
-            //                 Row(
-            //                   children: [
-            //                     Container(
-            //                       width: 10,
-            //                       height: 10,
-            //                       decoration: const BoxDecoration(
-            //                         color: Color(0xFF2d3561),
-            //                         shape: BoxShape.circle,
-            //                       ),
-            //                     ),
-            //                     const SizedBox(width: 8),
-            //                     Text(
-            //                       'Worn  $_wornPercent%',
-            //                       style: const TextStyle(
-            //                         fontSize: 13,
-            //                         color: Color(0xFF1a1a2e),
-            //                       ),
-            //                     ),
-            //                   ],
-            //                 ),
-            //                 const SizedBox(height: 8),
-            //                 Row(
-            //                   children: [
-            //                     Container(
-            //                       width: 10,
-            //                       height: 10,
-            //                       decoration: BoxDecoration(
-            //                         color: Colors.grey.shade300,
-            //                         shape: BoxShape.circle,
-            //                       ),
-            //                     ),
-            //                     const SizedBox(width: 8),
-            //                     Text(
-            //                       'Not Worn  $_notWornPercent%',
-            //                       style: const TextStyle(
-            //                         fontSize: 13,
-            //                         color: Color(0xFF1a1a2e),
-            //                       ),
-            //                     ),
-            //                   ],
-            //                 ),
-            //               ],
-            //             ),
-            //           ],
-            //         ),
-            // ),
 
             const SizedBox(height: 16),
 
@@ -502,43 +443,15 @@ class _CategoryPieChartState extends State<_CategoryPieChart> {
   }
 }
 
-// class _DonutChartPainter extends CustomPainter {
-//   final double wornPercent;
+// line chart
 
-//   _DonutChartPainter({required this.wornPercent});
+class _LineChart extends StatelessWidget{
+  final List<Map<String, dynamic>> items;
 
-//   @override
-//   void paint(Canvas canvas, Size size) {
-//     final center = Offset(size.width / 2, size.height / 2);
-//     final radius = size.width / 2 - 8;
-//     const strokeWidth = 12.0;
+  const _LineChart({required this.items});
 
-//     final bgPaint = Paint()
-//       ..color = Colors.grey.shade200
-//       ..style = PaintingStyle.stroke
-//       ..strokeWidth = strokeWidth
-//       ..strokeCap = StrokeCap.round;
-
-//     final fgPaint = Paint()
-//       ..color = const Color(0xFF2d3561)
-//       ..style = PaintingStyle.stroke
-//       ..strokeWidth = strokeWidth
-//       ..strokeCap = StrokeCap.round;
-
-//     canvas.drawCircle(center, radius, bgPaint);
-
-//     const startAngle = -1.5708;
-//     final sweepAngle = 2 * 3.14159 * wornPercent;
-
-//     canvas.drawArc(
-//       Rect.fromCircle(center: center, radius: radius),
-//       startAngle,
-//       sweepAngle,
-//       false,
-//       fgPaint,
-//     );
-//   }
-
-//   @override
-//   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-// } 
+  @override
+  Widget build(BuildContext context) {
+    return LineChart(LineChartData());
+  }
+}
