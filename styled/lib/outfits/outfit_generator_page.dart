@@ -15,6 +15,12 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   bool isLoading = false;
   int mode = 0; // 0 = pick items, 1 = by occasion, 2 = build outfit
 
+  // Build Outfit slots
+  Map<String, dynamic>? selectedTop;
+  Map<String, dynamic>? selectedBottom;
+  Map<String, dynamic>? selectedShoes;
+  Map<String, dynamic>? selectedAccessory; 
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +48,61 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
     setState(() => isLoading = false);
   }
 }
+
+Widget _buildSlot({
+  required String label,
+  required String emoji,
+  required Map<String, dynamic>? selected,
+}) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: selected != null ? const Color(0xFFEEF0FF) : const Color(0xFFF8F8FA),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(
+        color: selected != null ? const Color(0xFF2d3561) : const Color(0xFFE0E0E0),
+        width: selected != null ? 2 : 1,
+      ),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: const Color(0xFFEEEEEE),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(emoji, style: const TextStyle(fontSize: 26)),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 2),
+              Text(
+                selected != null ? selected['name'] ?? 'Unnamed' : 'Tap to pick',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: selected != null ? const Color(0xFF1a1a2e) : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Icon(Icons.add_circle_outline, color: Color(0xFF2d3561), size: 22),
+      ],
+    ),
+  );
+} 
+
 
   @override
   Widget build(BuildContext context) {
@@ -264,9 +325,10 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
                 ),
               ],
 
-              const SizedBox(height: 24),
+             const SizedBox(height: 24),
 
-              // Generate button (placeholder for now)
+              // Generate button (only for mode 0 and 1)
+              if (mode == 0 || mode == 1)
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -296,17 +358,31 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
                 ),
               ),
 
+              if (mode != 2) const SizedBox(height: 30),
+              
               // Mode 2: Build Outfit placeholder
               if (mode == 2) ...[
                 const Text(
-                  'Build Outfit coming soon...',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                  'Build your outfit:',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1a1a2e)),
                 ),
-              ],
+                const SizedBox(height: 4),
+                const Text(
+                  'Tap each slot to pick from your closet',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
 
-              const SizedBox(height: 30),
-              
-              
+                // Top slot
+                _buildSlot(label: 'TOP', emoji: '👕', selected: selectedTop),
+                // Bottom slot
+                _buildSlot(label: 'BOTTOM', emoji: '👖', selected: selectedBottom),
+                // Shoes slot
+                _buildSlot(label: 'SHOES', emoji: '👟', selected: selectedShoes),
+                // Accessory slot
+                _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory),
+              ],
+           
             ],
           ),
         ),
