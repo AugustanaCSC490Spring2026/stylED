@@ -13,7 +13,7 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   List<Map<String, dynamic>> closetItems = [];
   List<Map<String, dynamic>> selectedItems = [];
   bool isLoading = false;
-  int mode = 0; // 0 = pick items, 1 = by occasion
+  int mode = 0; // 0 = pick items, 1 = by occasion, 2 = build outfit
 
   @override
   void initState() {
@@ -114,11 +114,33 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
                           ),
                         ),
                       ),
+                      ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => mode = 2),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: mode == 2 ? const Color(0xFF2d3561) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            'Build Outfit',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: mode == 2 ? Colors.white : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
+                   
 
               // Mode 0: Pick items
               if (mode == 0) ...[
@@ -273,7 +295,18 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
                   ),
                 ),
               ),
+
+              // Mode 2: Build Outfit placeholder
+              if (mode == 2) ...[
+                const Text(
+                  'Build Outfit coming soon...',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
+
               const SizedBox(height: 30),
+              
+              
             ],
           ),
         ),
