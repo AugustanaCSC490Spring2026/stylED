@@ -227,22 +227,108 @@ String selectedOccasion = 'Formal';
     );
   }
 
+   final List<Map<String, dynamic>> allColors = [
+  {'name':'Beige', 'color': const Color(0xFFE8D8B5)},
+  {'name':'Black', 'color': Colors.black},
+  {'name':'Blue', 'color': Colors.blue},
+  {'name':'Brown', 'color': Colors.brown},
+  {'name':'Clear', 'color': const Color.fromARGB(255, 235, 240, 255)},
+  {'name':'Gold', 'color': const Color.fromARGB(255, 191, 162, 0)},
+  {'name':'Gray', 'color': const Color.fromARGB(255, 141, 141, 133)},
+  {'name':'Green', 'color': Colors.green},
+  {'name':'Multicolored', 'color': const Color(0xFFF4F4DC)},
+  {'name':'Off-white', 'color': const Color(0xFFF2F2F2)},
+  {'name':'Orange', 'color': Colors.orange},
+  {'name':'Pink', 'color': const Color.fromARGB(255, 255, 110, 158)},
+  {'name':'Purple', 'color': Colors.purple},
+  {'name':'Red', 'color': Colors.red},
+  {'name':'Silver', 'color': const Color.fromARGB(255, 75, 75, 62)},
+  {'name':'White', 'color': Colors.white},
+  {'name':'Yellow', 'color': Colors.yellow},
+  ];
+  List<String> selectedColorNames = [];
+
   Widget colorSheet(){
+    return StatefulBuilder(
+    builder: (context, setSheetState) {
     return SizedBox(
           height: 400,
            width: double.infinity, //fulll width
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start ,
             children: [
-              Padding(padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
+              Padding(
+                padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
             child: ElevatedButton(
               child: const Text('Close'),
               onPressed: () => Navigator.pop(context),
             ),
           ),
-            ],
+          Expanded( //fill everything underneath close button
+          child: ListView( //like a Column() with the addition of being scrollable
+          padding: const EdgeInsets.symmetric(horizontal: 18), //so that CircleAvatars  are not being cut off by screen
+          children: allColors.map((item) {
+                final isSelected = selectedColorNames.contains(item['name']);
+                return Column(
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Checkbox( //select color when little box is pressed on color selector
+                        value: isSelected,
+                        activeColor: const Color(0xFF2D3561),
+                        onChanged: (_) => setSheetState(() {
+                          if (isSelected){
+                      selectedColorNames.remove(item['name']); // if box already checked, this will unckeck it 
+                    } else {
+                      selectedColorNames.add(item['name']); //if box if not checked, this will check it 
+                    }
+                        }),
+                    ),
+                    title: Text(item['name']),
+                    trailing: Container( //color icons (CircleAvatars) black border
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.black,
+                          width: 2
+                        
+                      ),
+                      ),
+                      child: CircleAvatar( //multicolored icon imported jpeg
+                        radius: 14,
+                        backgroundColor: item['name'] == 'Multicolored' 
+                        ? Colors.transparent
+                        : item['color'] as Color,
+                        backgroundImage: item['name'] == 'Multicolored'
+                        ? const AssetImage('assets/icons/multi.png')
+                        :null,
+                      
+                        ),
+                    ),
+                      
+
+                    onTap: () => setSheetState(() { //select color when tapping anywhere on that specific row
+                      if (isSelected) {
+                        selectedColorNames.remove(item['name']);
+                      } else{
+                        selectedColorNames.add(item['name']);
+                      }
+                    }),
+              
+                  ),
+                    
+                  
+                  const Divider (height: 1),
+                  ],
+                );
+              }).toList(),
           ),
+          ),
+          ],
+    ),
     );
+  },
+  );
   }
 
   final List<String> types = ['Tops', 'Bottoms', 'Outwear', 'Shoes', 'Accessories','Dresses'];
