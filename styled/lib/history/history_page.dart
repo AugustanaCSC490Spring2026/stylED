@@ -39,6 +39,11 @@ class _HistoryPageState extends State<HistoryPage> {
 
         final items = response as List;
 
+        // for (var item in items) {
+        //   print('Item: ${item['name']} | createdAt: ${item['createdAt'
+        //   ]}');
+        // }
+        
         final worn = items.where((item) => item['dateLastWorn'] != null).toList();
 
         // Sort by times worn or just show items with names
