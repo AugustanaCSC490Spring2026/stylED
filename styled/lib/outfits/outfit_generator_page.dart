@@ -19,7 +19,13 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   String? outfitExplanation;
   bool isLoading = false;
   bool isGenerating = false;
-  int mode = 0;
+  int mode = 0; // 0 = pick items, 1 = by occasion, 2 = build outfit
+
+  // Build Outfit slots
+  Map<String, dynamic>? selectedTop;
+  Map<String, dynamic>? selectedBottom;
+  Map<String, dynamic>? selectedShoes;
+  Map<String, dynamic>? selectedAccessory;
 
   @override
   void initState() {
@@ -69,9 +75,9 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
       final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
 
       final limitedItems = closetItems.take(10).toList();
-final closetDescription = limitedItems.map((item) =>
-  'itemId:${item['itemId']}, Name:${item['name']}, Category:${item['category']}, Color:${item['color']}, Season:${item['season']}, Occasion:${item['occasion']}'
-).join('\n');
+      final closetDescription = limitedItems.map((item) =>
+        'itemId:${item['itemId']}, Name:${item['name']}, Category:${item['category']}, Color:${item['color']}, Season:${item['season']}, Occasion:${item['occasion']}'
+      ).join('\n');
 
       String prompt;
       if (mode == 0 && selectedItems.isNotEmpty) {
@@ -190,6 +196,60 @@ $closetDescription
     }
   }
 
+  Widget _buildSlot({
+    required String label,
+    required String emoji,
+    required Map<String, dynamic>? selected,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: selected != null ? const Color(0xFFEEF0FF) : const Color(0xFFF8F8FA),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: selected != null ? const Color(0xFF2d3561) : const Color(0xFFE0E0E0),
+          width: selected != null ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEEEEE),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 26)),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 2),
+                Text(
+                  selected != null ? selected['name'] ?? 'Unnamed' : 'Tap to pick',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: selected != null ? const Color(0xFF1a1a2e) : Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.add_circle_outline, color: Color(0xFF2d3561), size: 22),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -257,6 +317,27 @@ $closetDescription
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: mode == 1 ? Colors.white : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => mode = 2),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: mode == 2 ? const Color(0xFF2d3561) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            'Build Outfit',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: mode == 2 ? Colors.white : Colors.grey,
                             ),
                           ),
                         ),
@@ -387,46 +468,64 @@ $closetDescription
                 ),
               ],
 
+              if (mode == 2) ...[
+                const Text(
+                  'Build your outfit:',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1a1a2e)),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Tap each slot to pick from your closet',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                _buildSlot(label: 'TOP', emoji: '👕', selected: selectedTop),
+                _buildSlot(label: 'BOTTOM', emoji: '👖', selected: selectedBottom),
+                _buildSlot(label: 'SHOES', emoji: '👟', selected: selectedShoes),
+                _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory),
+              ],
+
               const SizedBox(height: 24),
 
-              // Generate button
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: isGenerating ? null : generateOutfit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2d3561),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+              // Generate button (only for mode 0 and 1)
+              if (mode == 0 || mode == 1)
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: isGenerating ? null : generateOutfit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2d3561),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
-                  ),
-                  child: isGenerating
-                      ? const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(color: Colors.white),
-                            SizedBox(width: 12),
-                            Text('Generating...', style: TextStyle(color: Colors.white)),
-                          ],
-                        )
-                      : const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.auto_awesome, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'Generate Outfit',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                    child: isGenerating
+                        ? const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(color: Colors.white),
+                              SizedBox(width: 12),
+                              Text('Generating...', style: TextStyle(color: Colors.white)),
+                            ],
+                          )
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.auto_awesome, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                'Generate Outfit',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                  ),
                 ),
-              ),
 
               // Generated outfit result
               if (generatedOutfit.isNotEmpty) ...[
