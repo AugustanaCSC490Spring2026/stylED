@@ -61,16 +61,54 @@ class _HistoryPageState extends State<HistoryPage> {
         final Map<String, int> breakdown = {};
         
         for (Map<String, dynamic> item in items) {
-          // if clothes type not listed, then it's stored in 'Other'
-          final cat = (item['category'] as String?) ?? 'Other';
-          breakdown[cat] = (breakdown[cat] ?? 0) + 1;
+          String category;
+
+          if (item['category'] != null && item['category'] is String) {
+            category = item['category'];
+          } else {
+            category = 'Other';
+          }
+
+          if (breakdown.containsKey(category)) {
+            breakdown[category] = breakdown[category]! + 1;
+          } else {
+            breakdown[category] = 1;
+          }
         }
+
+        // added by month
+        final Map<String, int> addedByMonth = {};
+        
+        // loop through all items
+        for (Map<String, dynamic> item in items) {
+          final month = item['created_at']?.toString();
+          if (month != null) {
+            // get only the year and month
+            final monthKey = month.substring(0, 7);
+
+            if (addedByMonth.containsKey(monthKey)) {
+              addedByMonth[monthKey] = addedByMonth[monthKey]! + 1;
+            } else {
+              addedByMonth[monthKey] = 1;
+            }
+            //addedByMonth[monthKey] = (addedByMonth[monthKey] ?? 0) + 1;
+          }
+        }
+
+        // sorts the months in chronological order
+        final sortedMonths = addedByMonth.keys.toList()..sort();
+
+        final spots = sortedMonths.asMap().entries.map((e) {
+          return FlSpot(e.key.toDouble(), addedByMonth[e.value]!.toDouble());
+        }).toList();
 
         setState(() {
           _totalItems = items.length;
           _wornItems = worn.length;
           _mostWornItems = wornWithCount;
           _categoryBreakdown = breakdown;
+          _addedPerMonth = spots;
+          _addedDateLabels = sortedMonths;
         });
       } catch (e) {
         // ignore
