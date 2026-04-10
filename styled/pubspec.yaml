@@ -16,10 +16,12 @@ dependencies:
   flutter_colorpicker: ^1.1.0 
   fl_chart: ^1.2.0
   google_generative_ai: ^0.4.7
+  flutter_dotenv: ^6.0.0
 
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/icons/
 
 dev_dependencies:

@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OutfitGeneratorPage extends StatefulWidget {
   const OutfitGeneratorPage({super.key});
@@ -12,8 +15,11 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   final occasionController = TextEditingController();
   List<Map<String, dynamic>> closetItems = [];
   List<Map<String, dynamic>> selectedItems = [];
+  List<Map<String, dynamic>> generatedOutfit = [];
+  String? outfitExplanation;
   bool isLoading = false;
-  int mode = 0; // 0 = pick items, 1 = by occasion
+  bool isGenerating = false;
+  int mode = 0;
 
   @override
   void initState() {
@@ -22,26 +28,167 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   }
 
   Future<void> fetchCloset() async {
-  setState(() => isLoading = true);
-  try {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
+    setState(() => isLoading = true);
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+      final data = await Supabase.instance.client
+          .from('clothes')
+          .select()
+          .eq('profile_id', userId);
+      setState(() {
+        closetItems = List<Map<String, dynamic>>.from(data);
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error: $e');
       setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> generateOutfit() async {
+    if (mode == 0 && selectedItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select at least one item!')),
+      );
       return;
     }
-    final data = await Supabase.instance.client
-        .from('clothes')
-        .select()
-        .eq('profile_id', userId);
-    setState(() {
-      closetItems = List<Map<String, dynamic>>.from(data);
-      isLoading = false;
-    });
-  } catch (e) {
-    debugPrint('Error: $e');
-    setState(() => isLoading = false);
-  }
+    if (mode == 1 && occasionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an occasion!')),
+      );
+      return;
+    }
+
+    setState(() => isGenerating = true);
+
+    try {
+      final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+
+      final limitedItems = closetItems.take(10).toList();
+final closetDescription = limitedItems.map((item) =>
+  'itemId:${item['itemId']}, Name:${item['name']}, Category:${item['category']}, Color:${item['color']}, Season:${item['season']}, Occasion:${item['occasion']}'
+).join('\n');
+
+      String prompt;
+      if (mode == 0 && selectedItems.isNotEmpty) {
+        final selected = selectedItems.map((item) =>
+          '${item['name']} (${item['category']})'
+        ).join(', ');
+        prompt = '''
+You are a fashion stylist. The user has selected: $selected.
+From the following closet items, suggest a complete outfit that works well with the selected items.
+Return ONLY a valid JSON object, no extra text, no markdown:
+{
+  "outfit": [1, 2, 3],
+  "explanation": "Brief explanation of why this outfit works"
 }
+Only use itemId numbers from this list:
+$closetDescription
+''';
+      } else {
+        final occasion = occasionController.text.trim();
+        prompt = '''
+You are a fashion stylist. Generate a complete outfit for the occasion: $occasion.
+From the following closet items, pick the best combination.
+Return ONLY a valid JSON object, no extra text, no markdown:
+{
+  "outfit": [1, 2, 3],
+  "explanation": "Brief explanation of why this outfit works"
+}
+Only use itemId numbers from this list:
+$closetDescription
+''';
+      }
+
+      final url = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=$apiKey',
+      );
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ]
+        }),
+      );
+
+      debugPrint('Status: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseJson = jsonDecode(response.body);
+        final text = responseJson['candidates'][0]['content']['parts'][0]['text'] as String;
+
+        final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(text);
+        if (jsonMatch != null) {
+          final json = jsonDecode(jsonMatch.group(0)!);
+          final outfitIds = List<int>.from(json['outfit']);
+          final explanation = json['explanation'] as String;
+
+          final outfitItems = closetItems
+              .where((item) => outfitIds.contains(item['itemId']))
+              .toList();
+
+          setState(() {
+            generatedOutfit = outfitItems;
+            outfitExplanation = explanation;
+          });
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('API Error: ${response.statusCode}')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error generating: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+
+    setState(() => isGenerating = false);
+  }
+
+  Future<void> saveOutfit() async {
+    if (generatedOutfit.isEmpty) return;
+    try {
+      final itemIds = generatedOutfit.map((item) => item['itemId'] as int).toList();
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      await Supabase.instance.client.from('outfits').insert({
+        'name': occasionController.text.isNotEmpty
+            ? '${occasionController.text} Outfit'
+            : 'AI Generated Outfit',
+        'occasion': occasionController.text,
+        'items': itemIds,
+        'owner_id': userId,
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Outfit saved! ✨')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +267,6 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
               ),
               const SizedBox(height: 24),
 
-              // Mode 0: Pick items
               if (mode == 0) ...[
                 const Text(
                   'Select items to build around:',
@@ -216,7 +362,6 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
                       ),
               ],
 
-              // Mode 1: By occasion
               if (mode == 1) ...[
                 const Text(
                   'What\'s the occasion?',
@@ -244,36 +389,159 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
 
               const SizedBox(height: 24),
 
-              // Generate button (placeholder for now)
+              // Generate button
               SizedBox(
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: isGenerating ? null : generateOutfit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2d3561),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.auto_awesome, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Generate Outfit',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                  child: isGenerating
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(color: Colors.white),
+                            SizedBox(width: 12),
+                            Text('Generating...', style: TextStyle(color: Colors.white)),
+                          ],
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.auto_awesome, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              'Generate Outfit',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
-              const SizedBox(height: 30),
+
+              // Generated outfit result
+              if (generatedOutfit.isNotEmpty) ...[
+                const SizedBox(height: 32),
+                const Text(
+                  'Your AI Outfit ✨',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1a1a2e),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (outfitExplanation != null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F2F5),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      outfitExplanation!,
+                      style: const TextStyle(color: Color(0xFF1a1a2e), fontSize: 14),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemCount: generatedOutfit.length,
+                  itemBuilder: (context, index) {
+                    final item = generatedOutfit[index];
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+                              child: item['image_url'] != null
+                                  ? Image.network(
+                                      item['image_url'],
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      color: const Color(0xFFF0F2F5),
+                                      child: const Center(
+                                        child: Icon(Icons.checkroom,
+                                            size: 48, color: Colors.grey),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Text(
+                              item['name'] ?? '',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Color(0xFF1a1a2e),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Save outfit button
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: OutlinedButton(
+                    onPressed: saveOutfit,
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      side: const BorderSide(color: Color(0xFF2d3561)),
+                    ),
+                    child: const Text(
+                      'Save Outfit',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2d3561),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
             ],
           ),
         ),

@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ignore environment variable files that hold API keys to avoid leaking to hackers!
+.env
+*.env.env

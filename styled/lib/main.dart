@@ -4,9 +4,11 @@ import 'auth/splash_screen.dart';
 import 'auth/login_page.dart';
 import 'auth/register_page.dart';
 import 'auth/home_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   await Supabase.initialize(
     url: 'https://ksztxqxsylspvicdphzh.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzenR4cXhzeWxzcHZpY2RwaHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTcyOTYsImV4cCI6MjA4ODEzMzI5Nn0.IWntG-60ZINeOY1BoZRhw1iJhCxWlKuUw2JOoaDqezc',
