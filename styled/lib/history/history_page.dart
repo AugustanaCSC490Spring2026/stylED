@@ -516,6 +516,20 @@ class _LineChart extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
+    if (dataSpot.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            'No clothes added yet. \nStart adding items to your closet!',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+    }
     return SizedBox(
       height: 200,
       child: Center(
