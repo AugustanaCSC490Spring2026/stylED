@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:styled/auth/login_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -136,17 +137,22 @@ class _HistoryPageState extends State<HistoryPage> {
           children: [
 
             // Title
-            const Text(
-              'History',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1a1a2e),
+            Center(
+              child: Text(
+                'History',
+                style: GoogleFonts.rockSalt(
+                  fontStyle: FontStyle.italic,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1a1a2e),
+                ),
               ),
             ),
-            const Text(
-              'Your outfit & wear history',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            Center(
+              child: const Text(
+                'Your outfit & wear history',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
             ),
 
             const SizedBox(height: 20),

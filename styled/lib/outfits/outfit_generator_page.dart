@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class OutfitGeneratorPage extends StatefulWidget {
   const OutfitGeneratorPage({super.key});
@@ -258,12 +259,13 @@ $closetDescription
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           'AI Outfit Planner',
-          style: TextStyle(
+          style: GoogleFonts.rockSalt(
+            fontStyle: FontStyle.italic,
             color: Color(0xFF1a1a2e),
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: 28,
           ),
         ),
       ),

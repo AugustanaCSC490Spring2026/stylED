@@ -5,6 +5,7 @@ import '../users/user_page.dart';
 import '../history/history_page.dart';
 import 'login_page.dart';
 import '../outfits/outfit_generator_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -149,7 +150,8 @@ class _HomeContentState extends State<_HomeContent> {
                     children: [
                       Text(
                         '${_getGreeting()}, ${_getShortName()}.',
-                        style: const TextStyle(
+                        style: GoogleFonts.rockSalt(
+                          fontStyle: FontStyle.italic,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1a1a2e),

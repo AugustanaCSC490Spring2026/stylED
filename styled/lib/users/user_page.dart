@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/login_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -83,9 +84,10 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
 
             // Title
-            const Text(
+            Text(
               'Profile',
-              style: TextStyle(
+              style: GoogleFonts.rockSalt(
+                fontStyle: FontStyle.italic,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1a1a2e),
