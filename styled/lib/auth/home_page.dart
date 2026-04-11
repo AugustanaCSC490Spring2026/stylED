@@ -62,6 +62,7 @@ class _HomeContent extends StatefulWidget {
 class _HomeContentState extends State<_HomeContent> {
   String _userName = '';
   int _totalItems = 0;
+  int _totalOutfits = 0;
 
   @override
   void initState() {
@@ -83,8 +84,14 @@ class _HomeContentState extends State<_HomeContent> {
             .from('clothes')
             .select()
             .eq('profile_id', userId.toString());
+
+        final outfitResponse = await Supabase.instance.client
+            .from('outfits')
+            .select()
+            .eq('owner_id', userId.toString()).gte('created_at', DateTime.now().subtract(const Duration(days: 30)).toIso8601String());
         setState(() {
           _totalItems = (response as List).length;
+          _totalOutfits = (outfitResponse as List).length;
         });
       } catch (e) {
         // ignore error
@@ -187,9 +194,9 @@ class _HomeContentState extends State<_HomeContent> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: _StatCard(
-                    value: '0',
+                    value: '$_totalOutfits',
                     label: 'Outfits This Month',
                   ),
                 ),

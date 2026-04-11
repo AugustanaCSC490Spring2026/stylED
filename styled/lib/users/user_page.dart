@@ -14,6 +14,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String _displayName = '';
   int _totalItems = 0;
   int _daysActive = 0;
+  int _totalOutfits = 0;
 
   @override
   void initState() {
@@ -40,8 +41,13 @@ class _ProfilePageState extends State<ProfilePage> {
             .from('clothes')
             .select()
             .eq('profile_id', userId.toString());
+        final outfitResponse = await Supabase.instance.client
+            .from('outfits')
+            .select()
+            .eq('owner_id', userId.toString());
         setState(() {
           _totalItems = (response as List).length;
+          _totalOutfits = (outfitResponse as List).length;
           _email = email;
           _displayName = displayName;
           _daysActive = days;
@@ -176,9 +182,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                 Expanded(
                   child: _ProfileStatCard(
-                    value: '0',
+                    value: '$_totalOutfits',
                     label: 'Outfits',
                   ),
                 ),
