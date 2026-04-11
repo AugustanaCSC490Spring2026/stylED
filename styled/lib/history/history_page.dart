@@ -519,7 +519,7 @@ class _LineChart extends StatelessWidget{
     if (dataSpot.isEmpty) {
       return const Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
+          padding: EdgeInsets.symmetric(vertical: 24),
           child: Text(
             'No clothes added yet. \nStart adding items to your closet!',
             style: TextStyle(
@@ -532,8 +532,14 @@ class _LineChart extends StatelessWidget{
     }
     return SizedBox(
       height: 200,
-      child: Center(
-        child: Text('Hello'),
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+        ),
+        borderData: FlBorderData(show: false),
+        ),
       ),
     );
   }
