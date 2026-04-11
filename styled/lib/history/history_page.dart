@@ -198,7 +198,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
             const SizedBox(height: 20),
 
-            // Most Worn Items
+            // Most Worn Items - bar chart
             Row(
               children: [
                 const Icon(Icons.trending_up,
@@ -274,6 +274,22 @@ class _HistoryPageState extends State<HistoryPage> {
                 ),
 
             const SizedBox(height: 16),
+
+            const Text(
+              'Items Added Over Time',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1a1a2e),                
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+
+            _LineChart(
+              dataSpot: _addedPerMonth,
+              dateLabels: _addedDateLabels,
+            ),
 
             // Insight Card
             if (_totalItems > 0 && _notWornPercent > 0)
@@ -490,12 +506,21 @@ class _CategoryPieChartState extends State<_CategoryPieChart> {
 // line chart
 
 class _LineChart extends StatelessWidget{
-  final List<Map<String, dynamic>> items;
+  final List<FlSpot> dataSpot;
+  final List<String> dateLabels;
 
-  const _LineChart({required this.items});
+  const _LineChart({
+    required this.dataSpot,
+    required this.dateLabels,
+    });
 
   @override
   Widget build(BuildContext context) {
-    return LineChart(LineChartData());
+    return SizedBox(
+      height: 200,
+      child: Center(
+        child: Text('Hello'),
+      ),
+    );
   }
 }
