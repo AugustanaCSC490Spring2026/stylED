@@ -539,7 +539,35 @@ class _LineChart extends StatelessWidget{
           drawVerticalLine: false,
         ),
         borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= dateLabels.length) {
+                  return const SizedBox();
+                }
+                // convert numerical dates to Month names
+                final parts = dateLabels[index].split('-');
+                final months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                final label = months[int.parse(parts[1])];
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ); 
+              },
+            ),
+          ),
+          // y-axis
         ),
+      ),
       ),
     );
   }
