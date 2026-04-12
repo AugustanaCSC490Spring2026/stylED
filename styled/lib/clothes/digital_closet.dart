@@ -63,12 +63,35 @@ class _DigitalClosetState extends State<DigitalCloset> {
 
   List<Map<String, dynamic>> get filteredItems { //filters in gallery
     return allItems.where((item) {
+
+      //this is the text search filter
       final matchesSearch = item['name']
               ?.toString()
               .toLowerCase()
               .contains(searchQuery.toLowerCase()) ??
           true;
-      return matchesSearch;
+
+      //this is the seasons filter
+
+      final matchesSeason = selectedSeason == null ||
+      item['season'] == selectedSeason;
+
+      //this the occasion filter 
+
+      final matchesOccasion = selectedOccasion == null ||
+      item['occasion'] == selectedOccasion;
+
+      //this the color filter
+
+      final matchesColor = selectedColorNames.isEmpty ||
+      selectedColorNames.contains(item['color']);
+
+      //this is the item type filter
+
+      final matchesType = selectedType == null ||
+      item['type'] == selectedType;
+
+      return matchesSearch && matchesSeason && matchesOccasion && matchesColor && matchesType;
     }).toList();
   }
 
@@ -96,17 +119,26 @@ class _DigitalClosetState extends State<DigitalCloset> {
         }
         
       },
-       ).then((_) {
-      setState(() => selectedFilter = null); //when the sheet closes, th filter chip category is also deselected
+       ).then((submitted) { //addition of the confirmation if filter selection was submitted
+        if(submitted == true){
+          setState(() {
+            
+          }); //only saves filter selection if the button "submit" was pressed
+        }
+      setState(() => selectedFilter = null); //when the sheet closes, the filter chip category is also deselected
     });
   }
 
-  final List<String> seasons = ['All Seasons','Winter','Summer','Fall','Spring',];
-  String selectedSeason = 'All Seasons';
+  final List<String> seasons = ['Winter','Summer','Fall','Spring',];
+  String ? selectedSeason; //null means allSeasons
 
   Widget seasonSheet(){ //code for individual bottom sheet based on filter option
+
+  //tempSeason need to be outside of builder so a selection isn't undone immediately
+  String ? tempSeason = selectedSeason; //current filter selection are copied into this this temporary saver, not validate or saved as real value until submit button is used
   return StatefulBuilder(
       builder: (context, setSheetState) { //sheet has its own setState
+      
     return SizedBox(
           height: 400,
           width: double.infinity, //full width
@@ -115,20 +147,45 @@ class _DigitalClosetState extends State<DigitalCloset> {
             children: [
               Padding(padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet 
             
-              child: ElevatedButton(
+              child: Row( //padding only accepts one child, so a row allows for multiple buttons to be held side by side
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children:[
+              
+              //Close button will discard pop the buttomSheet and discard any temporary selection made without Submit button
+              ElevatedButton(
               child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
-
+              onPressed: () => Navigator.pop(context, false), //it's false because it's not the submit button
+              ),
+            ElevatedButton(
+              child: const Text('Clear'),
+              onPressed: () => setSheetState((){ //clearly clears the selected season saved in the sheet
+                tempSeason = null;
+    }),
+              
             ),
+
+    ElevatedButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                setState(() => selectedSeason = tempSeason //actually validate temp season as real
+                );
+                Navigator.pop(context, true); //it's because this is the "submit" button
+
+              },
+
+    ),
+
+              ],
             
             ),
+              ),
 
              Column( //have each chip stacked on top of eachother
           crossAxisAlignment: CrossAxisAlignment.stretch, //makes the chips bigger and centers them
                 children: seasons.map((season) {
-                  final isSelected = selectedSeason == season;
+                  final isSelected = tempSeason == season; //clearly saves all filter selections under tempSeason intially
                   return GestureDetector(
-                    onTap: () => setSheetState(() => selectedSeason = season),
+                    onTap: () => setSheetState(() => tempSeason = season),
                     child: Container(
                       margin: const EdgeInsets.symmetric( //space out each chip 
                         horizontal: 16, 
@@ -159,19 +216,24 @@ class _DigitalClosetState extends State<DigitalCloset> {
                   );
                 }).toList(),
           ),
-                ],
+
+        
+                ]
           ),
     );
   }
         );
   }
 
-  final List<String> occasions = ['Formal', 'Casual', 'Athletic'];
-String selectedOccasion = 'Formal';
+final List<String> occasions = ['Formal', 'Casual', 'Athletic'];
+String ? selectedOccasion; //null means all occasions
 
   Widget occasionSheet(){
+    //tempOccasion is defined outside of builder so to not undo a selection immediately
+    String ? tempOccasion = selectedOccasion; //current filter selection are copied into this this temporary saver, not validate or saved as real value until submit button is used
     return StatefulBuilder(
       builder: (context, setSheetState) { //sheet has its own setState
+      
     return SizedBox(
           height: 400,
           width: double.infinity, //fulll width
@@ -179,17 +241,41 @@ String selectedOccasion = 'Formal';
                crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
-            child: ElevatedButton(
+            child: Row( //padding only accepts one child, so a row allows for multiple buttons to be held side by side
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children:[
+            
+            ElevatedButton(
+              //Close button will discard pop the buttomSheet and discard any temporary selection made without Submit button
               child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context,false), //it's false because it's not the submit button
             ),
+
+            ElevatedButton(
+              child: const Text('Clear'),
+              onPressed: () => setSheetState((){ //clearly clears the selected occasion saved in the sheet
+               tempOccasion = null;
+    }),
+            ),
+            
+
+    ElevatedButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                setState(() => selectedOccasion = tempOccasion);
+               Navigator.pop(context,true);//it's true because it's the "submit" button
+              },
+
+    ),
+              ],
           ),
+              ),
           Column( //have each chip stacked on top of eachother
           crossAxisAlignment: CrossAxisAlignment.stretch, //makes the chips bigger and centers them
                 children: occasions.map((occasion) {
-                  final isSelected = selectedOccasion == occasion;
+                  final isSelected = tempOccasion == occasion;
                   return GestureDetector(
-                    onTap: () => setSheetState(() => selectedOccasion = occasion),
+                    onTap: () => setSheetState(() => tempOccasion = occasion),
                     child: Container(
                       margin: const EdgeInsets.symmetric( //space out each chip 
                         horizontal: 16, 
@@ -249,8 +335,11 @@ String selectedOccasion = 'Formal';
   List<String> selectedColorNames = [];
 
   Widget colorSheet(){
+    //defining tempColorNames need to be done outside of builder so to not immediately deselect colors
+     List<String> tempColorNames = List.from(selectedColorNames); //temporary color selection list is used until validated with submit button
     return StatefulBuilder(
     builder: (context, setSheetState) {
+   
     return SizedBox(
           height: 400,
            width: double.infinity, //fulll width
@@ -259,16 +348,49 @@ String selectedOccasion = 'Formal';
             children: [
               Padding(
                 padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
-            child: ElevatedButton(
+            child: Row( //padding only accepts one child, so a row allows for multiple buttons to be held side by side
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children:[
+
+                //three buttons to interact with filter options: close, clear, and submit
+              ElevatedButton(
+                //Close button will discard pop the buttomSheet and discard any temporary selection made without Submit button
               child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context,false), //it's false because it's not the "submit button"
             ),
+
+            ElevatedButton(
+              child: const Text('Clear'),
+              onPressed: () => setSheetState((){ //clearly clear the selected colors saved in the sheet
+                tempColorNames.clear();
+    }),
+            ),
+
+    ElevatedButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                setState(() => selectedColorNames = tempColorNames);
+              Navigator.pop(context, true); //it's true because it's the "submit" button
+              },
+  
+    ),
+              ],
+            ),
+              
+
+   
+
+
+
+
+
+
           ),
           Expanded( //fill everything underneath close button
           child: ListView( //like a Column() with the addition of being scrollable
           padding: const EdgeInsets.symmetric(horizontal: 18), //so that CircleAvatars  are not being cut off by screen
           children: allColors.map((item) {
-                final isSelected = selectedColorNames.contains(item['name']);
+                final isSelected = tempColorNames.contains(item['name']);
                 return Column(
                   children: [
                     ListTile(
@@ -278,9 +400,9 @@ String selectedOccasion = 'Formal';
                         activeColor: const Color(0xFF2D3561),
                         onChanged: (_) => setSheetState(() {
                           if (isSelected){
-                      selectedColorNames.remove(item['name']); // if box already checked, this will unckeck it 
+                      tempColorNames.remove(item['name']); // if box already checked, this will unckeck it 
                     } else {
-                      selectedColorNames.add(item['name']); //if box if not checked, this will check it 
+                      tempColorNames.add(item['name']); //if box if not checked, this will check it 
                     }
                         }),
                     ),
@@ -309,9 +431,9 @@ String selectedOccasion = 'Formal';
 
                     onTap: () => setSheetState(() { //select color when tapping anywhere on that specific row
                       if (isSelected) {
-                        selectedColorNames.remove(item['name']);
+                        tempColorNames.remove(item['name']);
                       } else{
-                        selectedColorNames.add(item['name']);
+                        tempColorNames.add(item['name']);
                       }
                     }),
               
@@ -331,12 +453,15 @@ String selectedOccasion = 'Formal';
   );
   }
 
-  final List<String> types = ['Tops', 'Bottoms', 'Outwear', 'Shoes', 'Accessories','Dresses'];
-String selectedType= 'Tops';
+final List<String> types = ['Tops', 'Bottoms', 'Outwear', 'Shoes', 'Accessories','Dresses'];
+String ? selectedType; //null means all item types
 
     Widget typeSheet(){
+      //defining tempType outside of builder is necessary so to save type selection
+      String  ? tempType = selectedType;//current filter selection are copied into this this temporary saver, not validated or saved as real value until submit button is used
     return StatefulBuilder(
       builder: (context, setSheetState) { //sheet has its own setState
+      
     return SizedBox(
           height: 400,
           width: double.infinity, //fulll width
@@ -344,17 +469,45 @@ String selectedType= 'Tops';
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
-            child: ElevatedButton(
+            child: Row( //padding only accepts one child, so a row allows for multiple buttons to be held side by side
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children:[
+
+
+//Close button will discard pop the buttomSheet and discard any temporary selection made without Submit button
+            ElevatedButton(
+              //Close button will discard pop the buttomSheet and discard any temporary selection made without Submit button
               child: const Text('Close'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context, false), //it's false as it's not the "submit" button
             ),
+
+
+            ElevatedButton(
+              child: const Text('Clear'),
+              onPressed: () => setSheetState((){ //clearly clear the selected colors saved in the sheet
+                tempType = null;
+    }),
+              
+            ),
+
+    ElevatedButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                setState(() => selectedType = tempType);
+                 Navigator.pop(context, true); //it's true as it's clearly the "submit" button
+       }, 
+    ),
+              ],
+
+    ),
+            
           ),
           Column( //have each chip stacked on top of eachother
           crossAxisAlignment: CrossAxisAlignment.stretch, //makes the chips bigger and centers them
                 children: types.map((type) {
-                  final isSelected = selectedType == type;
+                  final isSelected = tempType == type;
                   return GestureDetector(
-                    onTap: () => setSheetState(() => selectedType = type),
+                    onTap: () => setSheetState(() => tempType = type),
                     child: Container(
                       margin: const EdgeInsets.symmetric( //space out each chip 
                         horizontal: 16, 
