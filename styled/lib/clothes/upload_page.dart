@@ -5,11 +5,14 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'dart:typed_data';
 import 'package:styled/auth/login_page.dart';
 
-class UploadPage extends StatefulWidget {
-  const UploadPage({super.key});
+class UploadPage extends StatefulWidget { //holds the properties passed in
+  final Map<String, dynamic>? existingClothingItem; //passing null when item is just being added or a map when opening a pre-exisiting item
+  const UploadPage({super.key, this.existingClothingItem}); //accepts the optional existing clothing item
 
   @override
   State<UploadPage> createState() => _UploadPageState();
+
+
 }
 
 class _UploadPageState extends State<UploadPage> {
@@ -55,6 +58,30 @@ class _UploadPageState extends State<UploadPage> {
   {'name':'White', 'color': Colors.white},
   {'name':'Yellow', 'color': Colors.yellow},
   ];
+
+  @override
+  void initState(){ //inherited method which will be modified to make changes in items that where already added by recovering their information
+    super.initState();
+
+    if(widget.existingClothingItem != null){ //if item was already added information is pre-filled
+
+    final item = widget.existingClothingItem!; //! confirms Dart that you know that the item isn't null
+
+    //where the pre-filling actualling happens, if value is null use an empty string
+    nameController.text = item['name'] ?? '';
+    descriptionController.text = item['description'] ?? '';
+    selectedType = item['category'];
+    selectedSeason = item['season'] ?? 'All Seasons';
+    selectedOccasion = item['occasion'];
+
+    //since color names are stored in a single string, each separated by a comma, we need to split them back into individual naames
+    //converting these into a Set afterwards is necessary so that the right boxes are checked
+
+    selectedColorNames = Set.from((item ['color'] as String? ?? '').split(', ').where((c) => c.isNotEmpty)
+
+    );
+    }
+  }
 
   Future<void> pickImage() async {
     final picker = ImagePicker();
@@ -103,7 +130,26 @@ class _UploadPageState extends State<UploadPage> {
             .getPublicUrl(path);
       }
 
+      final isEditing = widget.existingClothingItem != null;
 
+      if(isEditing){
+        //make sure that any updates to an already added clothing item are actually saved
+        await Supabase.instance.client.from('clothes').update({
+          'name': nameController.text.trim(),
+          'category': selectedType,
+          'color': selectedColorNames.join(', '),
+          'season': selectedSeason,
+          'occasion': selectedOccasion,
+          'description': descriptionController.text.trim(),
+          'dateLastWorn': dateLastWorn?.toIso8601String().split('T')[0],
+          'collection_only': collectionOnly, //boolean: true or false
+          //image should only be updated if new one is picked
+
+          if(imageUrl != null) 'image_url':imageUrl,
+        })
+        .eq('itemId', widget.existingClothingItem!['itemId']);
+
+      }else{
       // Save to clothes table
       await Supabase.instance.client.from('clothes').insert({
         'name': nameController.text.trim(),
@@ -118,6 +164,8 @@ class _UploadPageState extends State<UploadPage> {
         'collection_only': collectionOnly,
         'profile_id': userId,
       });
+
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -145,8 +193,8 @@ class _UploadPageState extends State<UploadPage> {
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1a1a2e)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Add New Item',
+        title: Text( //window title can't be hardcoded, should change depending on whether an item is being added or edited
+        widget.existingClothingItem != null ? 'Edit Item' : 'Add New Item', // two possible headers depending on whether the item had been previously added or not
           style: TextStyle(
             color: Color(0xFF1a1a2e),
             fontWeight: FontWeight.bold,
@@ -590,4 +638,6 @@ class _UploadPageState extends State<UploadPage> {
       ),
     );
   }
+
+  
 }

@@ -770,7 +770,7 @@ String ? selectedType; //null means all item types
                      ),
                       IconButton(
                         icon: const Icon(
-                          Icons.delete, 
+                          Icons.delete, //gabage can icon
                           size: 18, 
                           color: Colors.red),
                       onPressed: () {
@@ -796,6 +796,24 @@ String ? selectedType; //null means all item types
                         );
                       },
                     ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () async {
+                        //wait until user comes back from the edit page
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => UploadPage(existingClothingItem: item,),
+                            ),
+                        );
+                        fetchItems(); //after return from the edit page, all item are fetched once again from Supabase to reflect any changes made
+
+                      },
+                    )
                   ],
                 ),
                 const SizedBox(height: 6),
