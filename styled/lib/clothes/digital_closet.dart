@@ -84,12 +84,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
       //this the color filter
 
       final matchesColor = selectedColorNames.isEmpty ||
-      selectedColorNames.contains(item['color']);
+      selectedColorNames.any((color) =>
+      (item['color'] as String? ?? '').split(', ').contains(color)); //split the stored screen where colors are separated by a comma and checks if any of the filter colors are in that list
+
 
       //this is the item type filter
 
       final matchesType = selectedType == null ||
-      item['type'] == selectedType;
+      item['category'] == selectedType;
 
       return matchesSearch && matchesSeason && matchesOccasion && matchesColor && matchesType;
     }).toList();
@@ -453,7 +455,7 @@ String ? selectedOccasion; //null means all occasions
   );
   }
 
-final List<String> types = ['Tops', 'Bottoms', 'Outwear', 'Shoes', 'Accessories','Dresses'];
+final List<String> types = ['Tops', 'Bottoms', 'Outerwear', 'Shoes', 'Accessories','Dresses'];
 String ? selectedType; //null means all item types
 
     Widget typeSheet(){

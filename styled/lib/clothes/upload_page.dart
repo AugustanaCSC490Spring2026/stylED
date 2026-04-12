@@ -17,7 +17,6 @@ class _UploadPageState extends State<UploadPage> {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
   String? selectedType;
-  Color selectedColor = Colors.blue;
   Set<String> selectedColorNames = {};
   String selectedSeason = 'All Seasons';
   String selectedOccasion = 'Formal';
@@ -109,7 +108,7 @@ class _UploadPageState extends State<UploadPage> {
       await Supabase.instance.client.from('clothes').insert({
         'name': nameController.text.trim(),
         'category': selectedType,
-        'color': selectedColor.value.toRadixString(16),
+        'color': selectedColorNames.join(', '), //Set<String> of color names that stores selected colors in the picker
         'season': selectedSeason,
         'occasion': selectedOccasion,
         'description': descriptionController.text.trim(),
