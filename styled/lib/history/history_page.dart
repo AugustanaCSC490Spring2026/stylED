@@ -540,6 +540,7 @@ class _LineChart extends StatelessWidget{
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
+          // x-axis: months
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -565,8 +566,43 @@ class _LineChart extends StatelessWidget{
               },
             ),
           ),
-          // y-axis
+          // y-axis: counts
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  value.toInt().toString(),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey,
+                  ),
+                );
+              },
+            ),
+          ),
+          // hide top and right labels
+          topTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false)
+          ),
+          rightTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false)
+          ),
         ),
+        lineBarsData: [
+            LineChartBarData(
+              spots: dataSpot,
+              isCurved: true,
+              color: const Color(0xFF2d3561),
+              barWidth: 3,
+              dotData: FlDotData(show: true),
+              belowBarData: BarAreaData(
+                show: true,
+                color: const Color(0xFF2d3561).withOpacity(0.1),
+              )
+            )
+          ]
       ),
       ),
     );
