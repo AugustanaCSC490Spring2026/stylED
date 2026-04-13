@@ -431,7 +431,7 @@ Widget _buildSlot({
              if (mode == 0 || mode == 1) const SizedBox(height: 24),
 
               // Generate button (only for mode 0 and 1)
-              if (mode == 0 || mode == 1)S
+              if (mode == 0 || mode == 1)
               SizedBox(
                 width: double.infinity,
                 height: 54,
