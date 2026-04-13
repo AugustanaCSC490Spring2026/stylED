@@ -10,6 +10,7 @@ class OutfitGeneratorPage extends StatefulWidget {
 
 class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   final occasionController = TextEditingController();
+  final outfitNameController = TextEditingController();
   List<Map<String, dynamic>> closetItems = [];
   List<Map<String, dynamic>> selectedItems = [];
   bool isLoading = false;
@@ -206,7 +207,7 @@ Widget _buildSlot({
 } 
 
 
-  @override
+  @overriden
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -491,6 +492,21 @@ Widget _buildSlot({
                 GestureDetector(
                   onTap: () => _showItemPicker('Accessory', 'accessory', (item) => setState(() => selectedAccessory = item)),
                   child: _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory, onClear: () => setState(() => selectedAccessory = null)),
+                ),
+              const SizedBox(height: 8),
+                TextField(
+                  controller: outfitNameController,
+                  decoration: InputDecoration(
+                    hintText: 'Give your outfit a name...',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(Icons.drive_file_rename_outline, color: Color(0xFF2d3561)),
+                    filled: true,
+                    fillColor: const Color(0xFFF0F2F5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
               ],
            
