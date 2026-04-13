@@ -1,9 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OutfitGeneratorPage extends StatefulWidget {
   const OutfitGeneratorPage({super.key});
@@ -16,11 +12,7 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   final occasionController = TextEditingController();
   List<Map<String, dynamic>> closetItems = [];
   List<Map<String, dynamic>> selectedItems = [];
-  List<Map<String, dynamic>> generatedOutfit = [];
-  String? outfitExplanation;
   bool isLoading = false;
-  bool isGenerating = false;
-  int mode = 0; // 0 = pick items, 1 = by occasion, 2 = build outfit
 
   // Build Outfit slots
   Map<String, dynamic>? selectedTop;
@@ -28,231 +20,185 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   Map<String, dynamic>? selectedShoes;
   Map<String, dynamic>? selectedAccessory;
 
+  int mode = 0; // 0 = pick items, 1 = by occasion, 2 = build outfit
+
   @override
   void initState() {
     super.initState();
     fetchCloset();
   }
 
-  Future<void> fetchCloset() async {
-    setState(() => isLoading = true);
-    try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        setState(() => isLoading = false);
-        return;
-      }
-      final data = await Supabase.instance.client
-          .from('clothes')
-          .select()
-          .eq('profile_id', userId);
-      setState(() {
-        closetItems = List<Map<String, dynamic>>.from(data);
-        isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Error: $e');
-      setState(() => isLoading = false);
-    }
+  List<Map<String, dynamic>> _itemsByCategory(String category) {
+    final lower = category.toLowerCase();
+    return closetItems.where((item) {
+      final cat = (item['category'] ?? '').toString().toLowerCase();
+      return cat.contains(lower) ||
+          (lower == 'top' && (cat.contains('shirt') || cat.contains('top') || cat.contains('blouse') || cat.contains('jacket') || cat.contains('hoodie'))) ||
+          (lower == 'bottom' && (cat.contains('pant') || cat.contains('jean') || cat.contains('skirt') || cat.contains('shorts') || cat.contains('bottom'))) ||
+          (lower == 'shoes' && (cat.contains('shoe') || cat.contains('sneaker') || cat.contains('boot') || cat.contains('loafer') || cat.contains('heel'))) ||
+          (lower == 'accessory' && (cat.contains('access') || cat.contains('hat') || cat.contains('bag') || cat.contains('belt') || cat.contains('jewelry')));
+    }).toList();
   }
 
-  Future<void> generateOutfit() async {
-    if (mode == 0 && selectedItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one item!')),
-      );
-      return;
-    }
-    if (mode == 1 && occasionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an occasion!')),
-      );
-      return;
-    }
-
-    setState(() {
-      isGenerating = true;
-      generatedOutfit = [];
-      outfitExplanation = null;
-      });
-
-    try {
-      final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
-
-      final closetDescription = closetItems.map((item) =>
-        'itemId:${item['itemId']}, Name:${item['name']}, Category:${item['category']}, Color:${item['color']}, Season:${item['season']}, Occasion:${item['occasion']}'
-      ).join('\n');
-
-      String prompt;
-      if (mode == 0 && selectedItems.isNotEmpty) {
-        final selected = selectedItems.map((item) =>
-          '${item['name']} (${item['category']})'
-        ).join(', ');
-        prompt = '''
-You are a fashion stylist. The user has selected: $selected.
-From the following closet items, suggest a complete outfit that works well with the selected items.
-Return ONLY a valid JSON object, no extra text, no markdown:
-{
-  "outfit": [1, 2, 3],
-  "explanation": "Brief explanation of why this outfit works"
-}
-Only use itemId numbers from this list:
-$closetDescription
-''';
-      } else {
-        final occasion = occasionController.text.trim();
-        prompt = '''
-You are a fashion stylist. Generate a complete outfit for the occasion: $occasion.
-From the following closet items, pick the best combination.
-Return ONLY a valid JSON object, no extra text, no markdown:
-{
-  "outfit": [1, 2, 3],
-  "explanation": "Brief explanation of why this outfit works"
-}
-Only use itemId numbers from this list:
-$closetDescription
-''';
-      }
-
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=$apiKey',
-      );
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {'text': prompt}
-              ]
-            }
-          ]
-        }),
-      );
-
-      debugPrint('Status: ${response.statusCode}');
-      debugPrint('Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final responseJson = jsonDecode(response.body);
-        final text = responseJson['candidates'][0]['content']['parts'][0]['text'] as String;
-
-        final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(text);
-        if (jsonMatch != null) {
-          final json = jsonDecode(jsonMatch.group(0)!);
-          final outfitIds = List<int>.from(json['outfit']);
-          final explanation = json['explanation'] as String;
-
-          final outfitItems = closetItems
-              .where((item) => outfitIds.contains(item['itemId']))
-              .toList();
-
-          setState(() {
-            generatedOutfit = outfitItems;
-            outfitExplanation = explanation;
-          });
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('API Error: ${response.statusCode}')),
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint('Error generating: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-
-    setState(() => isGenerating = false);
-  }
-
-  Future<void> saveOutfit() async {
-    if (generatedOutfit.isEmpty) return;
-    try {
-      final itemIds = generatedOutfit.map((item) => item['itemId'] as int).toList();
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      await Supabase.instance.client.from('outfits').insert({
-        'name': occasionController.text.isNotEmpty
-            ? '${occasionController.text} Outfit'
-            : 'AI Generated Outfit',
-        'occasion': occasionController.text,
-        'items': itemIds,
-        'owner_id': userId,
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Outfit saved! ✨')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving: $e')),
-        );
-      }
-    }
-  }
-
-  Widget _buildSlot({
-    required String label,
-    required String emoji,
-    required Map<String, dynamic>? selected,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: selected != null ? const Color(0xFFEEF0FF) : const Color(0xFFF8F8FA),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: selected != null ? const Color(0xFF2d3561) : const Color(0xFFE0E0E0),
-          width: selected != null ? 2 : 1,
-        ),
+  void _showItemPicker(String slotLabel, String category, Function(Map<String, dynamic>) onPick) {
+    final items = _itemsByCategory(category);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEEEEE),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 26)),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 2),
-                Text(
-                  selected != null ? selected['name'] ?? 'Unnamed' : 'Tap to pick',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: selected != null ? const Color(0xFF1a1a2e) : Colors.grey,
-                  ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Pick a $slotLabel',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1a1a2e),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              items.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          'No $slotLabel items in your closet yet.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    )
+                  : Expanded(
+                      child: ListView.builder(
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          return ListTile(
+                            leading: item['image_url'] != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      item['image_url'],
+                                      width: 50,
+                                      height: 50,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF0F2F5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(Icons.checkroom, color: Colors.grey),
+                                  ),
+                            title: Text(
+                              item['name'] ?? 'Unnamed',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(
+                              item['category'] ?? '',
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                            onTap: () {
+                              onPick(item);
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+            ],
           ),
-          const Icon(Icons.add_circle_outline, color: Color(0xFF2d3561), size: 22),
-        ],
-      ),
+        );
+      },
     );
   }
+
+
+  Future<void> fetchCloset() async {
+  setState(() => isLoading = true);
+  try {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      setState(() => isLoading = false);
+      return;
+    }
+    final data = await Supabase.instance.client
+        .from('clothes')
+        .select()
+        .eq('profile_id', userId);
+    setState(() {
+      closetItems = List<Map<String, dynamic>>.from(data);
+      isLoading = false;
+    });
+  } catch (e) {
+    debugPrint('Error: $e');
+    setState(() => isLoading = false);
+  }
+}
+
+Widget _buildSlot({
+  required String label,
+  required String emoji,
+  required Map<String, dynamic>? selected,
+}) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: selected != null ? const Color(0xFFEEF0FF) : const Color(0xFFF8F8FA),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(
+        color: selected != null ? const Color(0xFF2d3561) : const Color(0xFFE0E0E0),
+        width: selected != null ? 2 : 1,
+      ),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: const Color(0xFFEEEEEE),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(emoji, style: const TextStyle(fontSize: 26)),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 2),
+              Text(
+                selected != null ? selected['name'] ?? 'Unnamed' : 'Tap to pick',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: selected != null ? const Color(0xFF1a1a2e) : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Icon(Icons.add_circle_outline, color: Color(0xFF2d3561), size: 22),
+      ],
+    ),
+  );
+} 
+
 
   @override
   Widget build(BuildContext context) {
@@ -262,13 +208,12 @@ $closetDescription
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text(
+        title: const Text(
           'AI Outfit Planner',
-          style: GoogleFonts.rockSalt(
-            fontStyle: FontStyle.italic,
+          style: TextStyle(
             color: Color(0xFF1a1a2e),
             fontWeight: FontWeight.bold,
-            fontSize: 28,
+            fontSize: 20,
           ),
         ),
       ),
@@ -326,7 +271,7 @@ $closetDescription
                           ),
                         ),
                       ),
-                    ),
+                      ),
                     Expanded(
                       child: GestureDetector(
                         onTap: () => setState(() => mode = 2),
@@ -352,7 +297,9 @@ $closetDescription
                 ),
               ),
               const SizedBox(height: 24),
+                   
 
+              // Mode 0: Pick items
               if (mode == 0) ...[
                 const Text(
                   'Select items to build around:',
@@ -448,6 +395,7 @@ $closetDescription
                       ),
               ],
 
+              // Mode 1: By occasion
               if (mode == 1) ...[
                 const Text(
                   'What\'s the occasion?',
@@ -473,6 +421,42 @@ $closetDescription
                 ),
               ],
 
+             const SizedBox(height: 24),
+
+              // Generate button (only for mode 0 and 1)
+              if (mode == 0 || mode == 1)
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2d3561),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.auto_awesome, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'Generate Outfit',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              if (mode != 2) const SizedBox(height: 30),
+              
+              // Mode 2: Build Outfit placeholder
               if (mode == 2) ...[
                 const Text(
                   'Build your outfit:',
@@ -484,168 +468,26 @@ $closetDescription
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
-                _buildSlot(label: 'TOP', emoji: '👕', selected: selectedTop),
-                _buildSlot(label: 'BOTTOM', emoji: '👖', selected: selectedBottom),
-                _buildSlot(label: 'SHOES', emoji: '👟', selected: selectedShoes),
-                _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory),
+
+                // Top slot
+          GestureDetector(
+                  onTap: () => _showItemPicker('Top', 'top', (item) => setState(() => selectedTop = item)),
+                  child: _buildSlot(label: 'TOP', emoji: '👕', selected: selectedTop),
+                ),
+                GestureDetector(
+                  onTap: () => _showItemPicker('Bottom', 'bottom', (item) => setState(() => selectedBottom = item)),
+                  child: _buildSlot(label: 'BOTTOM', emoji: '👖', selected: selectedBottom),
+                ),
+                GestureDetector(
+                  onTap: () => _showItemPicker('Shoes', 'shoes', (item) => setState(() => selectedShoes = item)),
+                  child: _buildSlot(label: 'SHOES', emoji: '👟', selected: selectedShoes),
+                ),
+                GestureDetector(
+                  onTap: () => _showItemPicker('Accessory', 'accessory', (item) => setState(() => selectedAccessory = item)),
+                  child: _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory),
+                ),
               ],
-
-              const SizedBox(height: 24),
-
-              // Generate button (only for mode 0 and 1)
-              if (mode == 0 || mode == 1)
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: isGenerating ? null : generateOutfit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2d3561),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: isGenerating
-                        ? const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(color: Colors.white),
-                              SizedBox(width: 12),
-                              Text('Generating...', style: TextStyle(color: Colors.white)),
-                            ],
-                          )
-                        : const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.auto_awesome, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text(
-                                'Generate Outfit',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-                ),
-
-              // Generated outfit result
-              if (generatedOutfit.isNotEmpty) ...[
-                const SizedBox(height: 32),
-                const Text(
-                  'Your AI Outfit ✨',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1a1a2e),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (outfitExplanation != null)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F2F5),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Text(
-                      outfitExplanation!,
-                      style: const TextStyle(color: Color(0xFF1a1a2e), fontSize: 14),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.75,
-                  ),
-                  itemCount: generatedOutfit.length,
-                  itemBuilder: (context, index) {
-                    final item = generatedOutfit[index];
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(16),
-                              ),
-                              child: item['image_url'] != null
-                                  ? Image.network(
-                                      item['image_url'],
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      color: const Color(0xFFF0F2F5),
-                                      child: const Center(
-                                        child: Icon(Icons.checkroom,
-                                            size: 48, color: Colors.grey),
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Text(
-                              item['name'] ?? '',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Color(0xFF1a1a2e),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Save outfit button
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: OutlinedButton(
-                    onPressed: saveOutfit,
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      side: const BorderSide(color: Color(0xFF2d3561)),
-                    ),
-                    child: const Text(
-                      'Save Outfit',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2d3561),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 30),
-              ],
+           
             ],
           ),
         ),
