@@ -23,7 +23,7 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
 
   int mode = 0; // 0 = pick items, 1 = by occasion, 2 = build outfit
 
-  @override
+ @override
   void initState() {
     super.initState();
     fetchCloset();
@@ -207,7 +207,7 @@ Widget _buildSlot({
 } 
 
 
-  @overriden
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -428,10 +428,10 @@ Widget _buildSlot({
                 ),
               ],
 
-             const SizedBox(height: 24),
+             if (mode == 0 || mode == 1) const SizedBox(height: 24),
 
               // Generate button (only for mode 0 and 1)
-              if (mode == 0 || mode == 1)
+              if (mode == 0 || mode == 1)S
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -460,9 +460,9 @@ Widget _buildSlot({
                   ),
                 ),
               ),
+               
+              if (mode == 2) const SizedBox(height: 0),
 
-              if (mode != 2) const SizedBox(height: 30),
-              
               // Mode 2: Build Outfit placeholder
               if (mode == 2) ...[
                 const Text(
@@ -493,7 +493,7 @@ Widget _buildSlot({
                   onTap: () => _showItemPicker('Accessory', 'accessory', (item) => setState(() => selectedAccessory = item)),
                   child: _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory, onClear: () => setState(() => selectedAccessory = null)),
                 ),
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
                 TextField(
                   controller: outfitNameController,
                   decoration: InputDecoration(
@@ -508,6 +508,7 @@ Widget _buildSlot({
                     ),
                   ),
                 ),
+                const SizedBox(height: 30),
               ],
            
             ],
