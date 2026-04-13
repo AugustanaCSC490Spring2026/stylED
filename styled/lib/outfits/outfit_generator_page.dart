@@ -70,7 +70,11 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
       return;
     }
 
-    setState(() => isGenerating = true);
+    setState(() {
+      isGenerating = true;
+      generatedOutfit = [];
+      outfitExplanation = null;
+      });
 
     try {
       final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
