@@ -124,6 +124,51 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   }
 
 
+  Future<void> saveOutfit() async {
+    if (outfitNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please give your outfit a name!')),
+      );
+      return;
+    }
+    if (selectedTop == null && selectedBottom == null && selectedShoes == null && selectedAccessory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select at least one item!')),
+      );
+      return;
+    }
+    try { 
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      await Supabase.instance.client.from('outfits').insert({
+        'profile_id': userId,
+        'name': outfitNameController.text.trim(),
+        'top_id': selectedTop?['id'],
+        'bottom_id': selectedBottom?['id'],
+        'shoes_id': selectedShoes?['id'],
+        'accessory_id': selectedAccessory?['id'],
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Outfit saved! 🎉'),
+            backgroundColor: Color(0xFF2d3561),
+          ),
+        );
+        setState(() {
+          selectedTop = null;
+          selectedBottom = null;
+          selectedShoes = null;
+          selectedAccessory = null;
+          outfitNameController.clear();
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving outfit: $e')),
+      );
+    }
+  }
   Future<void> fetchCloset() async {
   setState(() => isLoading = true);
   try {
@@ -505,6 +550,35 @@ Widget _buildSlot({
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: saveOutfit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2d3561),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.bookmark_add, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          'Save Outfit',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
