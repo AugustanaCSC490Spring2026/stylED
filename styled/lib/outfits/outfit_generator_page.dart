@@ -75,8 +75,7 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
     try {
       final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
 
-      final limitedItems = closetItems.take(10).toList();
-      final closetDescription = limitedItems.map((item) =>
+      final closetDescription = closetItems.map((item) =>
         'itemId:${item['itemId']}, Name:${item['name']}, Category:${item['category']}, Color:${item['color']}, Season:${item['season']}, Occasion:${item['occasion']}'
       ).join('\n');
 
