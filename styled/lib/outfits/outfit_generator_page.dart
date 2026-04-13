@@ -149,6 +149,7 @@ Widget _buildSlot({
   required String label,
   required String emoji,
   required Map<String, dynamic>? selected,
+  required VoidCallback onClear,
 }) {
   return Container(
     margin: const EdgeInsets.only(bottom: 12),
@@ -193,7 +194,12 @@ Widget _buildSlot({
             ],
           ),
         ),
-        const Icon(Icons.add_circle_outline, color: Color(0xFF2d3561), size: 22),
+        selected != null
+            ? GestureDetector(
+                onTap: onClear,
+                child: const Icon(Icons.close, color: Colors.grey, size: 20),
+              )
+            : const Icon(Icons.add_circle_outline, color: Color(0xFF2d3561), size: 22),
       ],
     ),
   );
@@ -472,19 +478,19 @@ Widget _buildSlot({
                 // Top slot
           GestureDetector(
                   onTap: () => _showItemPicker('Top', 'top', (item) => setState(() => selectedTop = item)),
-                  child: _buildSlot(label: 'TOP', emoji: '👕', selected: selectedTop),
+                  child: _buildSlot(label: 'TOP', emoji: '👕', selected: selectedTop, onClear: () => setState(() => selectedTop = null)),
                 ),
                 GestureDetector(
                   onTap: () => _showItemPicker('Bottom', 'bottom', (item) => setState(() => selectedBottom = item)),
-                  child: _buildSlot(label: 'BOTTOM', emoji: '👖', selected: selectedBottom),
+                  child: _buildSlot(label: 'BOTTOM', emoji: '👖', selected: selectedBottom, onClear: () => setState(() => selectedBottom = null)),
                 ),
                 GestureDetector(
                   onTap: () => _showItemPicker('Shoes', 'shoes', (item) => setState(() => selectedShoes = item)),
-                  child: _buildSlot(label: 'SHOES', emoji: '👟', selected: selectedShoes),
+                  child: _buildSlot(label: 'SHOES', emoji: '👟', selected: selectedShoes, onClear: () => setState(() => selectedShoes = null)),
                 ),
                 GestureDetector(
                   onTap: () => _showItemPicker('Accessory', 'accessory', (item) => setState(() => selectedAccessory = item)),
-                  child: _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory),
+                  child: _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory, onClear: () => setState(() => selectedAccessory = null)),
                 ),
               ],
            
