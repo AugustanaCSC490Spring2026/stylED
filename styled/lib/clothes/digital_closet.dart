@@ -22,6 +22,22 @@ class _DigitalClosetState extends State<DigitalCloset> {
   bool isLoadingOutfits = false;
 
   final List<String> filters = ['Season', 'Occasion', 'Color', 'Type'];
+  void clearAllFilters() {
+  setState(() {
+    selectedSeason = null;
+    selectedOccasion = null;
+    selectedColorNames.clear();
+    selectedType = null;
+    selectedFilter = null;
+  });
+}
+
+bool get hasActiveFilters {
+  return selectedSeason != null ||
+      selectedOccasion != null ||
+      selectedColorNames.isNotEmpty ||
+      selectedType != null;
+}
 
   List<Map<String, dynamic>> allItems = [];
   bool isLoading = true;
@@ -779,10 +795,32 @@ String ? selectedType; //null means all item types
 
               // Filters
               if (closetTab == 0) Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.filter_alt_outlined, size: 18, color: Colors.grey),
-                  const SizedBox(width: 6),
-                  const Text('Filters', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  Row(
+                    children: [
+                      const Icon(Icons.filter_alt_outlined, size: 18, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      const Text('Filters', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    ],
+                  ),
+                  if (selectedSeason != null || selectedOccasion != null || selectedColorNames.isNotEmpty || selectedType != null)
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        selectedSeason = null;
+                        selectedOccasion = null;
+                        selectedColorNames = [];
+                        selectedType = null;
+                      }),
+                      child: const Text(
+                        'Clear all',
+                        style: TextStyle(
+                          color: Color(0xFF2d3561),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                 ],
               ),
               if (closetTab == 0) const SizedBox(height: 8),
