@@ -64,6 +64,7 @@ class _HomeContentState extends State<_HomeContent> {
   String _userName = '';
   int _totalItems = 0;
   int _totalOutfits = 0;
+  Map<String, dynamic>? _mostWornItem;
 
   @override
   void initState() {
@@ -89,11 +90,35 @@ class _HomeContentState extends State<_HomeContent> {
         final outfitResponse = await Supabase.instance.client
             .from('outfits')
             .select()
-            .eq('profile_id', userId.toString()).gte('created_at', DateTime.now().subtract(const Duration(days: 30)).toIso8601String());
+            .eq('profile_id', userId.toString())
+            .gte('created_at', DateTime.now().subtract(const Duration(days: 30)).toIso8601String());
+
+        // count how many times each itemId appears across all outfits
+        final Map<String, int> itemCount = {};
+        for (final outfit in outfitResponse as List) {
+          for (final key in ['top_id', 'bottom_id', 'shoes_id', 'accessory_id']) {
+            final id = outfit[key]?.toString();
+            if (id != null) itemCount[id] = (itemCount[id] ?? 0) + 1;
+          }
+        }
+
+        Map<String, dynamic>? mostWorn;
+        if (itemCount.isNotEmpty) {
+          final topId = itemCount.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+          final clothes = List<Map<String, dynamic>>.from(response as List);
+          mostWorn = clothes.firstWhere(
+            (item) => item['itemId'].toString() == topId,
+            orElse: () => {},
+          );
+          if (mostWorn!.isEmpty) mostWorn = null;
+        }
+
         setState(() {
           _totalItems = (response as List).length;
           _totalOutfits = (outfitResponse as List).length;
+          _mostWornItem = mostWorn;
         });
+
       } catch (e) {
         // ignore error
       }
@@ -216,26 +241,45 @@ class _HomeContentState extends State<_HomeContent> {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.grey.shade200),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.trending_up, color: Color(0xFF2d3561), size: 20),
-                  SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Most Worn Item',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      Text(
-                        'Add items to your closet!',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1a1a2e),
+                  const Icon(Icons.trending_up, color: Color(0xFF2d3561), size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Most Worn Item',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        _mostWornItem == null
+                            ? const Text(
+                                'Add items to your closet!',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1a1a2e)),
+                              )
+                            : Row(
+                                children: [
+                                  if (_mostWornItem!['image_url'] != null)
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        _mostWornItem!['image_url'],
+                                        width: 48,
+                                        height: 48,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    _mostWornItem!['name'] ?? 'Unknown',
+                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1a1a2e)),
+                                  ),
+                                ],
+                              ),
+                      ],
+                    ),
                   ),
                 ],
               ),
