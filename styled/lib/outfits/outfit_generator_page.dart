@@ -245,6 +245,86 @@ $closetDescription
 
     setState(() => isGenerating = false);
   }
+  Future<void> saveAIOutfit() async {
+  if (outfitNameController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please give your outfit a name!')),
+    );
+    return;
+  }
+
+  if (generatedOutfit.isEmpty) return;
+
+  try {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
+    Map<String, dynamic>? aiTop;
+    Map<String, dynamic>? aiBottom;
+    Map<String, dynamic>? aiShoes;
+    Map<String, dynamic>? aiAccessory;
+
+    for (final item in generatedOutfit) {
+      final cat = (item['category'] ?? '').toString().toLowerCase();
+
+      if (cat.contains('top') ||
+          cat.contains('shirt') ||
+          cat.contains('blouse') ||
+          cat.contains('jacket') ||
+          cat.contains('hoodie')) {
+        aiTop = item;
+      } else if (cat.contains('bottom') ||
+          cat.contains('pant') ||
+          cat.contains('jean') ||
+          cat.contains('skirt') ||
+          cat.contains('shorts')) {
+        aiBottom = item;
+      } else if (cat.contains('shoe') ||
+          cat.contains('sneaker') ||
+          cat.contains('boot') ||
+          cat.contains('heel') ||
+          cat.contains('loafer')) {
+        aiShoes = item;
+      } else if (cat.contains('access') ||
+          cat.contains('hat') ||
+          cat.contains('bag') ||
+          cat.contains('belt') ||
+          cat.contains('jewelry')) {
+        aiAccessory = item;
+      }
+    }
+
+    await Supabase.instance.client.from('outfits').insert({
+      'profile_id': userId,
+      'name': outfitNameController.text.trim(),
+      'top_id': aiTop?['itemId']?.toString(),
+      'bottom_id': aiBottom?['itemId']?.toString(),
+      'shoes_id': aiShoes?['itemId']?.toString(),
+      'accessory_id': aiAccessory?['itemId']?.toString(),
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('AI Outfit saved! 🎉'),
+          backgroundColor: Color(0xFF2d3561),
+        ),
+      );
+
+      setState(() {
+        generatedOutfit = [];
+        outfitExplanation = null;
+        outfitNameController.clear();
+      });
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving AI outfit: $e')),
+      );
+    }
+  }
+}
 
   Future<void> saveOutfit() async {
     if (outfitNameController.text.trim().isEmpty) {
@@ -712,6 +792,40 @@ if (generatedOutfit.isNotEmpty) ...[
     },
   ),
   const SizedBox(height: 30),
+  TextField(
+    controller: outfitNameController,
+    decoration: InputDecoration(
+      hintText: 'Give this outfit a name...',
+      hintStyle: const TextStyle(color: Colors.grey),
+      prefixIcon: const Icon(Icons.drive_file_rename_outline, color: Color(0xFF2d3561)),
+      filled: true,
+      fillColor: const Color(0xFFF0F2F5),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+    ),
+  ),
+  const SizedBox(height: 12),
+  SizedBox(
+    width: double.infinity,
+    height: 54,
+    child: ElevatedButton(
+      onPressed: saveAIOutfit,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF2d3561),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bookmark_add, color: Colors.white),
+          SizedBox(width: 8),
+          Text('Save Outfit', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+        ],
+      ),
+    ),
+  ),
 ],
                
               if (mode == 2) const SizedBox(height: 0),
