@@ -89,7 +89,7 @@ class _HomeContentState extends State<_HomeContent> {
         final outfitResponse = await Supabase.instance.client
             .from('outfits')
             .select()
-            .eq('owner_id', userId.toString()).gte('created_at', DateTime.now().subtract(const Duration(days: 30)).toIso8601String());
+            .eq('profile_id', userId.toString()).gte('created_at', DateTime.now().subtract(const Duration(days: 30)).toIso8601String());
         setState(() {
           _totalItems = (response as List).length;
           _totalOutfits = (outfitResponse as List).length;

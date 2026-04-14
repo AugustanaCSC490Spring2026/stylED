@@ -45,7 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
         final outfitResponse = await Supabase.instance.client
             .from('outfits')
             .select()
-            .eq('owner_id', userId.toString());
+            .eq('profile_id', userId.toString());
         setState(() {
           _totalItems = (response as List).length;
           _totalOutfits = (outfitResponse as List).length;
