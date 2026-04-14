@@ -17,6 +17,9 @@ class _DigitalClosetState extends State<DigitalCloset> {
   final searchController = TextEditingController();
   String searchQuery = '';
   String? selectedFilter;
+  int closetTab = 0; // 0 = my closet, 1 = saved outfits
+  List<Map<String, dynamic>> savedOutfits = [];
+  bool isLoadingOutfits = false;
 
   final List<String> filters = ['Season', 'Occasion', 'Color', 'Type'];
 
@@ -27,8 +30,123 @@ class _DigitalClosetState extends State<DigitalCloset> {
   void initState() {
     super.initState();
     fetchItems();
+    fetchSavedOutfits();
   }
 
+  Future<void> fetchSavedOutfits() async {
+    setState(() => isLoadingOutfits = true);
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        setState(() => isLoadingOutfits = false);
+        return;
+      }
+      final data = await Supabase.instance.client
+          .from('outfits')
+          .select()
+          .eq('profile_id', userId);
+      setState(() {
+        savedOutfits = List<Map<String, dynamic>>.from(data);
+        isLoadingOutfits = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching outfits: $e');
+      setState(() => isLoadingOutfits = false);
+    }
+  }
+  void _showOutfitDetails(Map<String, dynamic> outfit) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    outfit['name'] ?? 'Unnamed Outfit',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1a1a2e)),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await Supabase.instance.client
+                          .from('outfits')
+                          .delete()
+                          .eq('outfitid', outfit['outfitid']);
+                      fetchSavedOutfits();
+                    },
+                  ),
+                ],
+              ),
+              Text(
+                outfit['created_at'] != null
+                    ? 'Saved on ${outfit['created_at'].toString().substring(0, 10)}'
+                    : '',
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: Column(
+                  children: [
+                    if (outfit['accessory_id'] != null) _outfitItemRow('Accessory', outfit['accessory_id'].toString()),
+                    if (outfit['top_id'] != null) _outfitItemRow('Top', outfit['top_id'].toString()),
+                    if (outfit['bottom_id'] != null) _outfitItemRow('Bottom', outfit['bottom_id'].toString()),
+                    if (outfit['shoes_id'] != null) _outfitItemRow('Shoes', outfit['shoes_id'].toString()),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _outfitItemRow(String label, String itemId) {
+  final item = allItems.firstWhere(
+    (i) => i['itemId'].toString() == itemId,
+    orElse: () => {'name': 'Item #$itemId', 'category': label},
+  );
+  return Column(
+    children: [
+      Container(
+        width: 160,
+        height: label == 'Shoes' ? 100 : label == 'Accessory' ? 80 : 120,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0F2F5),
+          border: Border.all(color: const Color(0xFFE0E0E0), width: 0.5),
+        ),
+        child: item['image_url'] != null
+            ? Image.network(item['image_url'], fit: BoxFit.cover, width: double.infinity)
+            : const Center(child: Icon(Icons.checkroom, color: Color(0xFF2d3561), size: 40)),
+      ),
+      Container(
+        width: 160,
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F8FA),
+          border: Border.all(color: const Color(0xFFE0E0E0), width: 0.5),
+        ),
+        child: Text(
+          item['name'] ?? 'Unknown',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
+        ),
+      ),
+    ],
+  );
+}
   Future<void> fetchItems() async {
   setState(() => isLoading = true);
   try {
@@ -561,10 +679,65 @@ String ? selectedType; //null means all item types
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Title
-               Center(
+               // Tab selector
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F2F5),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => closetTab = 0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          decoration: BoxDecoration(
+                            color: closetTab == 0 ? const Color(0xFF2d3561) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            'My Closet',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: closetTab == 0 ? Colors.white : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => closetTab = 1),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          decoration: BoxDecoration(
+                            color: closetTab == 1 ? const Color(0xFF2d3561) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            'Saved Outfits',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: closetTab == 1 ? Colors.white : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (closetTab == 0) Center(
                 child: Text(
                   'My Closet',
-                  style: GoogleFonts.rockSalt(
+                  style: GoogleFonts.rockSalt( 
+
                     fontStyle: FontStyle.italic,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -572,14 +745,14 @@ String ? selectedType; //null means all item types
                   ),
                 ),
               ),
-              Text(
+             if (closetTab == 0) Text(
                 '${filteredItems.length} items',
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
-              const SizedBox(height: 16),
+              if (closetTab == 0) const SizedBox(height: 16),
 
               // Search bar
-              TextField(
+              if (closetTab == 0) TextField(
                 controller: searchController,
                 onChanged: (val) => setState(() => searchQuery = val),
                 decoration: InputDecoration(
@@ -605,15 +778,15 @@ String ? selectedType; //null means all item types
               const SizedBox(height: 14),
 
               // Filters
-              Row(
+              if (closetTab == 0) Row(
                 children: [
                   const Icon(Icons.filter_alt_outlined, size: 18, color: Colors.grey),
                   const SizedBox(width: 6),
                   const Text('Filters', style: TextStyle(color: Colors.grey, fontSize: 13)),
                 ],
               ),
-              const SizedBox(height: 8),
-              SizedBox(
+              if (closetTab == 0) const SizedBox(height: 8),
+              if (closetTab == 0) SizedBox(
                 height: 36,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
@@ -653,9 +826,88 @@ String ? selectedType; //null means all item types
               ),
               const SizedBox(height: 16),
 
+            // Saved Outfits tab
+              if (closetTab == 1) ...[
+                Expanded(
+                  child: isLoadingOutfits
+                      ? const Center(child: CircularProgressIndicator())
+                      : savedOutfits.isEmpty
+                          ? const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.bookmark_border, size: 64, color: Colors.grey),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No saved outfits yet!',
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1a1a2e)),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text('Build and save outfits in the Planner tab', style: TextStyle(color: Colors.grey)),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: savedOutfits.length,
+                              itemBuilder: (context, index) {
+                                final outfit = savedOutfits[index];
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => _showOutfitDetails(outfit),
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: const Color(0xFFE0E0E0)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEEF0FF),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: const Icon(Icons.checkroom, color: Color(0xFF2d3561)),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              outfit['name'] ?? 'Unnamed Outfit',
+                                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Color(0xFF1a1a2e)),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              outfit['created_at'] != null
+                                                  ? 'Saved on ${outfit['created_at'].toString().substring(0, 10)}'
+                                                  : 'Saved outfit',
+                                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  ),
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+              ],
+
               // Grid
-              Expanded(
+              if (closetTab == 0) Expanded(
                 child: isLoading
+              
                     ? const Center(child: CircularProgressIndicator())
                     : filteredItems.isEmpty
                         ? Center(

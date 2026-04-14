@@ -137,15 +137,15 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
       );
       return;
     }
-    try { 
+    try {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       await Supabase.instance.client.from('outfits').insert({
         'profile_id': userId,
         'name': outfitNameController.text.trim(),
-        'top_id': selectedTop?['id'],
-        'bottom_id': selectedBottom?['id'],
-        'shoes_id': selectedShoes?['id'],
-        'accessory_id': selectedAccessory?['id'],
+        'top_id': selectedTop?['itemId']?.toString(),
+        'bottom_id': selectedBottom?['itemId']?.toString(),
+        'shoes_id': selectedShoes?['itemId']?.toString(),
+        'accessory_id': selectedAccessory?['itemId']?.toString(),
         'created_at': DateTime.now().toIso8601String(),
       });
       if (mounted) {
@@ -217,9 +217,17 @@ Widget _buildSlot({
             color: const Color(0xFFEEEEEE),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Center(
-            child: Text(emoji, style: const TextStyle(fontSize: 26)),
-          ),
+          child: selected != null && selected['image_url'] != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    selected['image_url'],
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : Center(
+                  child: Text(emoji, style: const TextStyle(fontSize: 26)),
+                ),
         ),
         const SizedBox(width: 14),
         Expanded(
