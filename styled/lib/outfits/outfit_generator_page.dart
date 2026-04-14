@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OutfitGeneratorPage extends StatefulWidget {
   const OutfitGeneratorPage({super.key});
@@ -14,6 +17,9 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   List<Map<String, dynamic>> closetItems = [];
   List<Map<String, dynamic>> selectedItems = [];
   bool isLoading = false;
+  bool isGenerating = false;
+  List<Map<String, dynamic>> generatedOutfit = [];
+  String? outfitExplanation;
 
   // Build Outfit slots
   Map<String, dynamic>? selectedTop;
@@ -123,6 +129,122 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
     );
   }
 
+  Future<void> generateOutfit() async {
+    if (mode == 0 && selectedItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select at least one item!')),
+      );
+      return;
+    }
+    if (mode == 1 && occasionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an occasion!')),
+      );
+      return;
+    }
+
+    setState(() {
+      isGenerating = true;
+      generatedOutfit = [];
+      outfitExplanation = null;
+    });
+
+    try {
+      final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+
+      final closetDescription = closetItems.map((item) =>
+        'itemId:${item['itemId']}, Name:${item['name']}, Category:${item['category']}, Color:${item['color']}, Season:${item['season']}, Occasion:${item['occasion']}'
+      ).join('\n');
+
+      String prompt;
+      if (mode == 0 && selectedItems.isNotEmpty) {
+        final selected = selectedItems.map((item) =>
+          '${item['name']} (${item['category']})'
+        ).join(', ');
+        prompt = '''
+You are a fashion stylist. The user has selected: $selected.
+From the following closet items, suggest a complete outfit that works well with the selected items.
+Return ONLY a valid JSON object, no extra text, no markdown:
+{
+  "outfit": [1, 2, 3],
+  "explanation": "Brief explanation of why this outfit works"
+}
+Only use itemId numbers from this list:
+$closetDescription
+''';
+      } else {
+        final occasion = occasionController.text.trim();
+        prompt = '''
+You are a fashion stylist. Generate a complete outfit for the occasion: $occasion.
+From the following closet items, pick the best combination.
+Return ONLY a valid JSON object, no extra text, no markdown:
+{
+  "outfit": [1, 2, 3],
+  "explanation": "Brief explanation of why this outfit works"
+}
+Only use itemId numbers from this list:
+$closetDescription
+''';
+      }
+
+      final url = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=$apiKey',
+      );
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ]
+        }),
+      );
+
+      debugPrint('Status: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseJson = jsonDecode(response.body);
+        final text = responseJson['candidates'][0]['content']['parts'][0]['text'] as String;
+
+        final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(text);
+        if (jsonMatch != null) {
+          final json = jsonDecode(jsonMatch.group(0)!);
+          final outfitIds = List<int>.from(json['outfit']);
+          final explanation = json['explanation'] as String;
+
+          final outfitItems = closetItems
+              .where((item) => outfitIds.contains(item['itemId']))
+              .toList();
+
+          setState(() {
+            generatedOutfit = outfitItems;
+            outfitExplanation = explanation;
+          });
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('API Error: ${response.statusCode}')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error generating: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+
+    setState(() => isGenerating = false);
+  }
 
   Future<void> saveOutfit() async {
     if (outfitNameController.text.trim().isEmpty) {
@@ -489,7 +611,7 @@ Widget _buildSlot({
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: isGenerating ? null : generateOutfit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2d3561),
                     shape: RoundedRectangleBorder(
@@ -513,6 +635,84 @@ Widget _buildSlot({
                   ),
                 ),
               ),
+              // Generated outfit result
+              // Generated outfit result
+if (generatedOutfit.isNotEmpty) ...[
+  const SizedBox(height: 32),
+  const Text(
+    'Your AI Outfit ✨',
+    style: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: Color(0xFF1a1a2e),
+    ),
+  ),
+  const SizedBox(height: 8),
+  if (outfitExplanation != null)
+    Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F2F5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        outfitExplanation!,
+        style: const TextStyle(color: Color(0xFF1a1a2e), fontSize: 14),
+      ),
+    ),
+  const SizedBox(height: 16),
+  GridView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 0.75,
+    ),
+    itemCount: generatedOutfit.length,
+    itemBuilder: (context, index) {
+      final item = generatedOutfit[index];
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: item['image_url'] != null
+                    ? Image.network(item['image_url'], width: double.infinity, fit: BoxFit.cover)
+                    : Container(
+                        color: const Color(0xFFF0F2F5),
+                        child: const Center(child: Icon(Icons.checkroom, size: 48, color: Colors.grey)),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Text(
+                item['name'] ?? '',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1a1a2e)),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  ),
+  const SizedBox(height: 30),
+],
                
               if (mode == 2) const SizedBox(height: 0),
 
