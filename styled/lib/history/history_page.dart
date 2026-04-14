@@ -48,15 +48,37 @@ class _HistoryPageState extends State<HistoryPage> {
         //   ]}');
         // }
 
-        final worn = items.where((item) => item['dateLastWorn'] != null).toList();
+        // fetch outfits to calculate most worn items
+        final outfitResponse = await Supabase.instance.client
+            .from('outfits')
+            .select()
+            .eq('profile_id', userId.toString());
 
-        // Sort by times worn or just show items with names
-        final wornWithCount = worn.take(4).map((item) {
+        final Map<String, int> itemCount = {};
+        for (final outfit in outfitResponse as List) {
+          for (final key in ['top_id', 'bottom_id', 'shoes_id', 'accessory_id']) {
+            final id = outfit[key]?.toString();
+            if (id != null) itemCount[id] = (itemCount[id] ?? 0) + 1;
+          }
+        }
+
+        final sortedIds = itemCount.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+        final wornWithCount = sortedIds.take(5).map((entry) {
+          final item = items.firstWhere(
+            (i) => i['itemId'].toString() == entry.key,
+            orElse: () => {'name': 'Unknown', 'image_url': null},
+          );
           return {
             'name': item['name'] ?? 'Unknown',
-            'count': (item['times_worn'] ?? 1) as int,
+            'image_url': item['image_url'],
+            'count': entry.value,
           };
         }).toList();
+
+        final worn = wornWithCount;
+
 
         // count of number of clothes type in each category
         final Map<String, int> breakdown = {};
@@ -105,7 +127,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
         setState(() {
           _totalItems = items.length;
-          _wornItems = worn.length;
+          _wornItems = wornWithCount.length;
           _mostWornItems = wornWithCount;
           _categoryBreakdown = breakdown;
           _addedPerMonth = spots;
@@ -338,12 +360,10 @@ class _BarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final maxCount = items.isEmpty
         ? 1
-        : items
-            .map((e) => e['count'] as int)
-            .reduce((a, b) => a > b ? a : b);
+        : items.map((e) => e['count'] as int).reduce((a, b) => a > b ? a : b);
 
     return SizedBox(
-      height: 120,
+      height: 200,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -353,28 +373,39 @@ class _BarChart extends StatelessWidget {
           return Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text(
-                '$count',
-                style: const TextStyle(
-                    fontSize: 11, color: Colors.grey),
-              ),
+              Text('$count', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              const SizedBox(height: 4),
+              if (item['image_url'] != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(item['image_url'], width: 44, height: 44, fit: BoxFit.cover),
+                )
+              else
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEF0FF),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.checkroom, color: Color(0xFF2d3561), size: 20),
+                ),
               const SizedBox(height: 4),
               Container(
                 width: 36,
                 height: height.clamp(10.0, 80.0),
                 decoration: BoxDecoration(
                   color: const Color(0xFF2d3561),
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(4)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                 ),
               ),
               const SizedBox(height: 6),
               SizedBox(
-                width: 50,
+                width: 52,
                 child: Text(
                   item['name'] as String,
-                  style: const TextStyle(
-                      fontSize: 10, color: Colors.grey),
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                 ),
