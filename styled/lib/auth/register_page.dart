@@ -19,11 +19,18 @@ class _RegisterPageState extends State<RegisterPage> {
   bool isLoading = false;
 
   Future<void> signUp() async {
+    final usernameError = validateUsername(usernameController.text);
     if (passwordController.text.trim() !=
         confirmPasswordController.text.trim()) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Passwords do not match!')));
+      return;
+    } else if (usernameError != null){
+      ScaffoldMessenger.of(
+        context
+      )
+      .showSnackBar(SnackBar(content: Text(usernameError)));
       return;
     }
     setState(() => isLoading = true);
@@ -47,6 +54,23 @@ class _RegisterPageState extends State<RegisterPage> {
       ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
     setState(() => isLoading = false);
+  }
+
+  String? validateUsername(String username){
+    final trimmed = usernameController.text.trim();
+
+    if (trimmed.length < 3 || trimmed.length > 15){
+      return "Username must be 3-15 characters long";
+    }
+
+    final validChars = RegExp(r'^[a-zA-Z0-9]+$');
+
+    if (!validChars.hasMatch(trimmed)){
+      return 'Usernames can only contain letters and numbers';
+    }
+
+    // valid
+    return null;
   }
 
   @override
