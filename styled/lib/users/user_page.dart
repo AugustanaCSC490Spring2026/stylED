@@ -27,8 +27,16 @@ class _ProfilePageState extends State<ProfilePage> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
       final userId = UserHolder.id;
+      final response = await Supabase.instance.client
+        .from('profiles')
+        .select('name')
+        .eq('id', userId.toString())
+        .single();
+      final userName = response['name'];
+
       final email = user.email ?? '';
-      final namePart = email.split('@').first;
+      //final namePart = email.split('@').first;
+      final namePart = userName;
       final parts = namePart.split('.');
       String displayName = parts.isNotEmpty
           ? parts.map((p) => p[0].toUpperCase() + p.substring(1)).join(' ')

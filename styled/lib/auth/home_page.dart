@@ -77,8 +77,16 @@ class _HomeContentState extends State<_HomeContent> {
     if (user != null) {
       final userId = UserHolder.id;
       final email = user.email ?? '';
+      final response = await Supabase.instance.client
+        .from('profiles')
+        .select('name')
+        .eq('id', userId.toString())
+        .single();
+      final userName = response['name'];
+
       setState(() {
-        _userName = email.split('@').first;
+        //_userName = email.split('@').first;
+        _userName = userName;
       });
 
       try {

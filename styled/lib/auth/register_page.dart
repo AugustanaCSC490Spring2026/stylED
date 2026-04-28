@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:styled/users/user_database.dart';
-import 'package:styled/users/user_data.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -33,6 +31,9 @@ class _RegisterPageState extends State<RegisterPage> {
       await Supabase.instance.client.auth.signUp(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
+        data: {
+          'user_name': usernameController.text.trim()
+        }
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
