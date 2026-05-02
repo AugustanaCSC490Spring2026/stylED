@@ -15,6 +15,8 @@ class UploadPage extends StatefulWidget { //holds the properties passed in
 
 }
 
+
+
 class _UploadPageState extends State<UploadPage> {
   Uint8List? _imageBytes;
   final nameController = TextEditingController();
@@ -26,6 +28,7 @@ class _UploadPageState extends State<UploadPage> {
   DateTime? dateLastWorn;
   bool collectionOnly = false;
   bool isLoading = false;
+  bool? isTie; // null = not asked yet, true/false = user answered
 
   final List<String> types = ['Tops','Bottoms','Outerwear','Shoes','Accessories','Dresses',];
   final List<String> seasons = ['All Seasons','Winter','Summer','Fall','Spring',];
@@ -62,10 +65,12 @@ class _UploadPageState extends State<UploadPage> {
   @override
   void initState(){ //inherited method which will be modified to make changes in items that where already added by recovering their information
     super.initState();
+    
 
     if(widget.existingClothingItem != null){ //if item was already added information is pre-filled
 
     final item = widget.existingClothingItem!; //! confirms Dart that you know that the item isn't null
+    isTie = item['is_tie'] as bool?; //tie identification isn't lost when coming back to edit an item
 
     //where the pre-filling actualling happens, if value is null use an empty string
     nameController.text = item['name'] ?? '';
@@ -134,9 +139,11 @@ class _UploadPageState extends State<UploadPage> {
 
       if(isEditing){
         //make sure that any updates to an already added clothing item are actually saved
+        //update clothing item map
         await Supabase.instance.client.from('clothes').update({
           'name': nameController.text.trim(),
           'category': selectedType,
+          'is_tie': isTie ?? false,
           'color': selectedColorNames.join(', '),
           'season': selectedSeason,
           'occasion': selectedOccasion,
@@ -151,9 +158,11 @@ class _UploadPageState extends State<UploadPage> {
 
       }else{
       // Save to clothes table
+      //insert new clothing item map
       await Supabase.instance.client.from('clothes').insert({
         'name': nameController.text.trim(),
         'category': selectedType,
+        'is_tie': isTie ?? false,
         'color': selectedColorNames.join(', '), //Set<String> of color names that stores selected colors in the picker
         'season': selectedSeason,
         'occasion': selectedOccasion,
@@ -180,6 +189,8 @@ class _UploadPageState extends State<UploadPage> {
     }
 
     setState(() => isLoading = false);
+
+    
   }
 
   @override
@@ -300,64 +311,17 @@ class _UploadPageState extends State<UploadPage> {
                               DropdownMenuItem(value: type, child: Text(type)),
                         )
                         .toList(),
-                    onChanged: (val) => setState(() => selectedType = val),
+                    onChanged: (val) {
+                      setState(() => selectedType = val);
+                      if (val == 'Accessories') {
+                        tieQuestionPopUp();
+                        }
+
+                    }, 
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-
-              // // Color
-              // _label('Color'),
-              // const SizedBox(height: 12),
-              // GestureDetector(
-              //   onTap: () {
-              //     showDialog(
-              //       context: context,
-              //       builder: (context) => AlertDialog(
-              //         title: const Text('Pick a color'),
-              //         content: SingleChildScrollView(
-              //           child: ColorPicker(
-              //             pickerColor: selectedColor,
-              //             onColorChanged: (color) =>
-              //                 setState(() => selectedColor = color),
-              //             enableAlpha: false,
-              //             labelTypes: const [],
-              //           ),
-              //         ),
-              //         actions: [
-              //           TextButton(
-              //             onPressed: () => Navigator.pop(context),
-              //             child: const Text(
-              //               'Done',
-              //               style: TextStyle(color: Color(0xFF2d3561)),
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //     );
-              //   },
-              //   child: Row(
-              //     children: [
-              //       Container(
-              //         width: 44,
-              //         height: 44,
-              //         decoration: BoxDecoration(
-              //           color: selectedColor,
-              //           shape: BoxShape.circle,
-              //           border: Border.all(
-              //             color: Colors.grey.shade300,
-              //             width: 2,
-              //           ),
-              //         ),
-              //       ),
-              //       const SizedBox(width: 12),
-              //       const Text(
-              //         'Tap to pick color',
-              //         style: TextStyle(color: Colors.grey),
-              //       ),
-              //     ],
-              //   ),
-              // ),
 
               //Color Widget
               _label('Color'),
@@ -627,6 +591,48 @@ class _UploadPageState extends State<UploadPage> {
       ),
     );
   }
+
+  void tieQuestionPopUp() {
+    showDialog(
+    context: context,
+    barrierDismissible: true, // if you tap outside of popup you can dismiss it 
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        'Is this a tie?',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF1a1a2e),
+        ),
+      ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
+      actions: [
+        TextButton(
+          onPressed: () {
+            setState(() => isTie = false); //assumes that the accessory is not a tie, meaning that ties have to be declared to be considered such
+            Navigator.pop(context);
+          },
+          child: const Text('No', style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            setState(() => isTie = true);
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2d3561),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text('Yes', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    ),
+  );
+  }
+
+
 
   Widget _label(String text) {
     return Text(
