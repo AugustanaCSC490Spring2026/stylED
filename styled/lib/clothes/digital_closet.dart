@@ -20,6 +20,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
   int closetTab = 0; // 0 = my closet, 1 = saved outfits
   List<Map<String, dynamic>> savedOutfits = [];
   bool isLoadingOutfits = false;
+  bool isGridView = true; //default is in Gridview to allow for an initial image gallery type of presentation
 
   final List<String> filters = ['Season', 'Occasion', 'Color', 'Type'];
   void clearAllFilters() {
@@ -715,13 +716,15 @@ String ? selectedType; //null means all item types
                           child: Text(
                             'My Closet',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.rockSalt(
+                              fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
                               color: closetTab == 0 ? Colors.white : Colors.grey,
                             ),
                           ),
                         ),
+                        
                       ),
                     ),
                     Expanded(
@@ -736,7 +739,8 @@ String ? selectedType; //null means all item types
                           child: Text(
                             'Saved Outfits',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.rockSalt(
+                              fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
                               color: closetTab == 1 ? Colors.white : Colors.grey,
@@ -749,18 +753,17 @@ String ? selectedType; //null means all item types
                 ),
               ),
               const SizedBox(height: 12),
-              if (closetTab == 0) Center(
-                child: Text(
-                  'My Closet',
-                  style: GoogleFonts.rockSalt( 
+              
+              //toggle button: switch from gridview to listview 
 
-                    fontStyle: FontStyle.italic,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1a1a2e),
-                  ),
-                ),
+              IconButton(icon: Icon(isGridView ? Icons.view_list: Icons.grid_view,
+              color: const Color(0xFF1a1a2e),
               ),
+              onPressed: () => setState(() => isGridView = !isGridView), //changes the isGridView boolean from true to false: gridview to listview
+              ),
+
+
+
              if (closetTab == 0) Text(
                 '${filteredItems.length} items',
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
@@ -970,7 +973,8 @@ String ? selectedType; //null means all item types
                               ],
                             ),
                           )
-                        : GridView.builder(
+                          : isGridView //conditional gridview builder
+                        ? GridView.builder(
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               crossAxisSpacing: 12,
@@ -981,6 +985,13 @@ String ? selectedType; //null means all item types
                             itemBuilder: (context, index) {
                               final item = filteredItems[index];
                               return _clothesCard(item);
+                            },
+                          )
+                          :ListView.builder(
+                            itemCount: filteredItems.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredItems[index];
+                              return _clothesListTitle(item);
                             },
                           ),
               ),
@@ -1116,6 +1127,119 @@ String ? selectedType; //null means all item types
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _clothesListTitle(Map<String,dynamic> item){
+    return Container(
+
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Image
+          ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: item['image_url'] != null
+                  ? Image.network(
+                      item['image_url'],
+                      width: 100,
+                      height:100,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 100,
+                      height:100,
+                      color: const Color(0xFFF0F2F5),
+                      child: const Center(
+                        child: Icon(Icons.checkroom, size: 48, color: Colors.grey),
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 12),
+          
+
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                        item['name'] ?? '',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Color(0xFF1a1a2e),
+                        ),
+                       ),
+                       const SizedBox(height: 6),
+                Row(
+                  children: [
+                    if (item['occasion'] != null) _tag(item['occasion']),
+                    const SizedBox(width: 6),
+                    if (item['season'] != null) _tag(item['season']),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          Column(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, size: 18, color: Colors.grey),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UploadPage(existingClothingItem: item),
+                    ),
+                  );
+                  fetchItems();
+                },
+              ),
+               IconButton(
+                        icon: const Icon(
+                          Icons.delete, //gabage can icon
+                          size: 18, 
+                          color: Colors.red),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Item'),
+                            content: const Text('Are you sure you want to delete this item?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    deleteItem(item['itemId']);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+               ),
+            ],
           ),
         ],
       ),

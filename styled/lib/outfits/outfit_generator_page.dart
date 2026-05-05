@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class OutfitGeneratorPage extends StatefulWidget {
   const OutfitGeneratorPage({super.key});
@@ -470,9 +471,10 @@ Widget _buildSlot({
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
-          'AI Outfit Planner',
-          style: TextStyle(
+        title:  Text(
+          'Outfit Planner',
+          style: GoogleFonts.rockSalt(
+            fontStyle: FontStyle.italic,
             color: Color(0xFF1a1a2e),
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -506,8 +508,10 @@ Widget _buildSlot({
                           child: Text(
                             'Pick Items',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.rockSalt(
+                              fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.w600,
+                              fontSize: 12,
                               color: mode == 0 ? Colors.white : Colors.grey,
                             ),
                           ),
@@ -526,8 +530,10 @@ Widget _buildSlot({
                           child: Text(
                             'By Occasion',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.rockSalt(
+                              fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.w600,
+                              fontSize: 12,
                               color: mode == 1 ? Colors.white : Colors.grey,
                             ),
                           ),
@@ -546,7 +552,8 @@ Widget _buildSlot({
                           child: Text(
                             'Build Outfit',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.rockSalt(
+                              fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.w600,
                               fontSize: 12,
                               color: mode == 2 ? Colors.white : Colors.grey,
