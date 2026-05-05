@@ -75,14 +75,14 @@ class _HomeContentState extends State<_HomeContent> {
   Future<void> _loadUserData() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      final userId = UserHolder.id;
-      final email = user.email ?? '';
+        final userId = user.id;
+        final email = user.email ?? '';
       final response = await Supabase.instance.client
         .from('profiles')
         .select('name')
-        .eq('id', userId.toString())
-        .single();
-      final userName = response['name'];
+        .eq('id', userId)
+        .maybeSingle();
+      final userName = response?['name'] ?? 'there';
 
       setState(() {
         //_userName = email.split('@').first;
@@ -93,12 +93,12 @@ class _HomeContentState extends State<_HomeContent> {
         final response = await Supabase.instance.client
             .from('clothes')
             .select()
-            .eq('profile_id', userId.toString());
+            .eq('profile_id', userId);
 
         final outfitResponse = await Supabase.instance.client
             .from('outfits')
             .select()
-            .eq('profile_id', userId.toString())
+            .eq('profile_id', userId)
             .gte('created_at', DateTime.now().subtract(const Duration(days: 30)).toIso8601String());
 
         // count how many times each itemId appears across all outfits
