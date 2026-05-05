@@ -26,11 +26,10 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfileData() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      final userId = UserHolder.id;
       final response = await Supabase.instance.client
         .from('profiles')
         .select('name')
-        .eq('id', userId.toString())
+        .eq('id', user.id)
         .single();
       final userName = response['name'];
 
@@ -49,11 +48,11 @@ class _ProfilePageState extends State<ProfilePage> {
         final response = await Supabase.instance.client
             .from('clothes')
             .select()
-            .eq('profile_id', userId.toString());
+            .eq('profile_id', user.id);
         final outfitResponse = await Supabase.instance.client
             .from('outfits')
             .select()
-            .eq('profile_id', userId.toString());
+            .eq('profile_id', user.id);
         setState(() {
           _totalItems = (response as List).length;
           _totalOutfits = (outfitResponse as List).length;

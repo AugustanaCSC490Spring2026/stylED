@@ -77,20 +77,21 @@ class _HomeContentState extends State<_HomeContent> {
     if (user != null) {
         final userId = user.id;
         final email = user.email ?? '';
-      final response = await Supabase.instance.client
+      final profileResponse = await Supabase.instance.client
         .from('profiles')
         .select('name')
         .eq('id', userId)
         .maybeSingle();
-      final userName = response?['name'] ?? 'there';
+      final userName = profileResponse?['name'] ?? 'there';
 
+      if (!mounted) return;
       setState(() {
         //_userName = email.split('@').first;
         _userName = userName;
       });
 
       try {
-        final response = await Supabase.instance.client
+        final clothesResponse = await Supabase.instance.client
             .from('clothes')
             .select()
             .eq('profile_id', userId);
@@ -113,7 +114,7 @@ class _HomeContentState extends State<_HomeContent> {
         Map<String, dynamic>? mostWorn;
         if (itemCount.isNotEmpty) {
           final topId = itemCount.entries.reduce((a, b) => a.value > b.value ? a : b).key;
-          final clothes = List<Map<String, dynamic>>.from(response as List);
+          final clothes = List<Map<String, dynamic>>.from(clothesResponse as List);
           mostWorn = clothes.firstWhere(
             (item) => item['itemId'].toString() == topId,
             orElse: () => {},
@@ -121,8 +122,9 @@ class _HomeContentState extends State<_HomeContent> {
           if (mostWorn!.isEmpty) mostWorn = null;
         }
 
+        if (!mounted) return;
         setState(() {
-          _totalItems = (response as List).length;
+          _totalItems = (clothesResponse as List).length;
           _totalOutfits = (outfitResponse as List).length;
           _mostWornItem = mostWorn;
         });
