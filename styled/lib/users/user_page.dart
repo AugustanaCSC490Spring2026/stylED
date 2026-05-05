@@ -26,12 +26,12 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfileData() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      final response = await Supabase.instance.client
+      final profileResponse = await Supabase.instance.client
         .from('profiles')
         .select('name')
         .eq('id', user.id)
         .single();
-      final userName = response['name'];
+      final userName = profileResponse['name'];
 
       final email = user.email ?? '';
       //final namePart = email.split('@').first;
@@ -45,7 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final days = DateTime.now().difference(DateTime.parse(createdAt)).inDays;
 
       try {
-        final response = await Supabase.instance.client
+        final clothesResponse = await Supabase.instance.client
             .from('clothes')
             .select()
             .eq('profile_id', user.id);
@@ -54,7 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
             .select()
             .eq('profile_id', user.id);
         setState(() {
-          _totalItems = (response as List).length;
+          _totalItems = (clothesResponse as List).length;
           _totalOutfits = (outfitResponse as List).length;
           _email = email;
           _displayName = displayName;
