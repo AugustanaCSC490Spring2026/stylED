@@ -14,6 +14,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final ageController = TextEditingController();
   bool showPassword = false;
   bool showConfirmPassword = false;
   bool isLoading = false;
@@ -39,7 +40,8 @@ class _RegisterPageState extends State<RegisterPage> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
         data: {
-          'user_name': usernameController.text.trim()
+          'user_name': usernameController.text.trim(),
+          'age': int.tryParse(ageController.text.trim()) ?? 0,
         }
       );
       if (mounted) {
@@ -164,7 +166,38 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
               ),
-              
+              const SizedBox(height: 20),
+
+              // Age
+              const Text(
+                'Age',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: Color(0xFF1a1a2e),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: ageController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: '25',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(
+                    Icons.cake,
+                    color: Colors.grey,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF0F2F5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
               // Password
               const Text(
                 'Password',

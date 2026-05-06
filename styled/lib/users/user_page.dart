@@ -28,10 +28,11 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user != null) {
       final profileResponse = await Supabase.instance.client
         .from('profiles')
-        .select('name')
+        .select('name, age')
         .eq('id', user.id)
         .single();
-      final userName = profileResponse['name'];
+      final age = profileResponse['age'] ?? 0;
+      final userName = profileResponse['name'] + " (" + age.toString() + " Years Old)";
 
       final email = user.email ?? '';
       //final namePart = email.split('@').first;
