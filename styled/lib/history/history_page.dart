@@ -34,7 +34,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _loadData() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      final userId = UserHolder.id;
+      final userId = user.id;
       try {
         final response = await Supabase.instance.client
             .from('clothes')

@@ -9,9 +9,9 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class UserHolder {
+/*class UserHolder {
   static String? id;
-}
+}*/
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -37,12 +37,12 @@ class _LoginPageState extends State<LoginPage> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-
-      final user = res.user;
-      if (user != null){
+      /*
+       final user = res.user;
+       if (user != null){
         UserHolder.id = user.id;
-      }
-  
+      } 
+      */
       //if (mounted) Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

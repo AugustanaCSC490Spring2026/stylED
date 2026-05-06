@@ -111,7 +111,8 @@ class _UploadPageState extends State<UploadPage> {
     setState(() => isLoading = true);
 
     try {
-      final userId = UserHolder.id;
+      final user = Supabase.instance.client.auth.currentUser;
+      final userId = user?.id;
 
       if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -195,6 +196,11 @@ class _UploadPageState extends State<UploadPage> {
 
   @override
   Widget build(BuildContext context) {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
