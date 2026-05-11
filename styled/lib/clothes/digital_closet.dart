@@ -25,7 +25,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
   final List<String> filters = ['Season', 'Occasion', 'Color', 'Type'];
   void clearAllFilters() {
   setState(() {
-    selectedSeason = null;
+    selectedSeason = {}; //empty set
     selectedOccasion = null;
     selectedColorNames.clear();
     selectedType = null;
@@ -34,7 +34,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
 }
 
 bool get hasActiveFilters {
-  return selectedSeason != null ||
+  return selectedSeason.isNotEmpty ||
       selectedOccasion != null ||
       selectedColorNames.isNotEmpty ||
       selectedType != null;
@@ -208,8 +208,8 @@ bool get hasActiveFilters {
 
       //this is the seasons filter
 
-      final matchesSeason = selectedSeason == null ||
-      item['season'] == selectedSeason;
+      final matchesSeason = selectedSeason.isEmpty ||
+      selectedSeason.contains(item['season']);
 
       //this the occasion filter 
 
@@ -238,14 +238,27 @@ bool get hasActiveFilters {
       builder: (BuildContext context) {
         switch (filter){ //open a different bottomsheet based on the selected filter button
           case 'Season': 
-          return seasonSheet();
+          return filterSelectionSheet(seasons, selectedSeason, (chosenItems) => setState(() => selectedSeason = chosenItems));
 
           case 'Occasion':
           return occasionSheet();
 
           case 'Color':
-          return colorSheet();
-
+          return filterSelectionSheet(allColorsMap.keys.toList(), Set.from(selectedColorNames), //with allColorsMap now being Map<String,Color>, its keys are now the color names
+          //Set.from(selectedColorNames): what colors have already been submitted
+          //(chosenItems) => setState(() => selectedColorNames = List.from(chosenItems)): when the submit button is pressed, the final selections are saved back to the state
+              (chosenItems) => setState(() => selectedColorNames = List.from(chosenItems)),
+              iconCreatorFunction: (name) => CircleAvatar( //multicolored icon imported jpeg
+                        radius: 14,
+                        backgroundColor: name == 'Multicolored' 
+                        ? Colors.transparent
+                        : allColorsMap[name]!, //name is key
+                        backgroundImage: name == 'Multicolored'
+                        ? const AssetImage('assets/icons/multi.png')
+                        :null,
+                      
+                        )
+          );
           case 'Type':
           return typeSheet();
 
@@ -267,12 +280,12 @@ bool get hasActiveFilters {
   }
 
   final List<String> seasons = ['Winter','Summer','Fall','Spring',];
-  String ? selectedSeason; //null means allSeasons
+  Set<String> selectedSeason = {};//null means allSeasons
 
   Widget seasonSheet(){ //code for individual bottom sheet based on filter option
 
   //tempSeason need to be outside of builder so a selection isn't undone immediately
-  String ? tempSeason = selectedSeason; //current filter selection are copied into this this temporary saver, not validate or saved as real value until submit button is used
+  Set<String> tempSeason = Set.from(selectedSeason); //current filter selection are copied into this this temporary saver, not validate or saved as real value until submit button is used
   return StatefulBuilder(
       builder: (context, setSheetState) { //sheet has its own setState
       
@@ -296,7 +309,7 @@ bool get hasActiveFilters {
             ElevatedButton(
               child: const Text('Clear'),
               onPressed: () => setSheetState((){ //clearly clears the selected season saved in the sheet
-                tempSeason = null;
+                tempSeason.clear();
     }),
               
             ),
@@ -322,7 +335,13 @@ bool get hasActiveFilters {
                 children: seasons.map((season) {
                   final isSelected = tempSeason == season; //clearly saves all filter selections under tempSeason intially
                   return GestureDetector(
-                    onTap: () => setSheetState(() => tempSeason = season),
+                    onTap: () => setSheetState((){
+                      if (tempSeason.contains(season)) {
+                        tempSeason.remove(season);
+                      }else{
+                        tempSeason.add(season);
+                      }
+                    }),
                     child: Container(
                       margin: const EdgeInsets.symmetric( //space out each chip 
                         horizontal: 16, 
@@ -450,69 +469,94 @@ String ? selectedOccasion; //null means all occasions
     );
   }
 
-   final List<Map<String, dynamic>> allColors = [
-  {'name':'Beige', 'color': const Color(0xFFE8D8B5)},
-  {'name':'Black', 'color': Colors.black},
-  {'name':'Blue', 'color': Colors.blue},
-  {'name':'Brown', 'color': Colors.brown},
-  {'name':'Clear', 'color': const Color.fromARGB(255, 235, 240, 255)},
-  {'name':'Gold', 'color': const Color.fromARGB(255, 191, 162, 0)},
-  {'name':'Gray', 'color': const Color.fromARGB(255, 141, 141, 133)},
-  {'name':'Green', 'color': Colors.green},
-  {'name':'Multicolored', 'color': const Color(0xFFF4F4DC)},
-  {'name':'Off-white', 'color': const Color(0xFFF2F2F2)},
-  {'name':'Orange', 'color': Colors.orange},
-  {'name':'Pink', 'color': const Color.fromARGB(255, 255, 110, 158)},
-  {'name':'Purple', 'color': Colors.purple},
-  {'name':'Red', 'color': Colors.red},
-  {'name':'Silver', 'color': const Color.fromARGB(255, 75, 75, 62)},
-  {'name':'White', 'color': Colors.white},
-  {'name':'Yellow', 'color': Colors.yellow},
-  ];
+final Map<String,Color> allColorsMap = {
+  'Beige': const Color(0xFFE8D8B5),
+  'Black': Colors.black,
+  'Brown': Colors.brown,
+  'Clear': const Color.fromARGB(255, 235, 240, 255),
+  'Gold': const Color.fromARGB(255, 191, 162, 0),
+  'Gray': const Color.fromARGB(255, 141, 141, 133),
+  'Green': Colors.green,
+  'Multicolored': const Color(0xFFF4F4DC),
+  'Off-white': const Color(0xFFF2F2F2),
+  'Orange': Colors.orange,
+  'Pink': const Color.fromARGB(255, 255, 110, 158),
+  'Purple': Colors.purple,
+  'Red': Colors.red,
+  'Silver': const Color.fromARGB(255, 75, 75, 62),
+  'White': Colors.white,
+  'Yellow': Colors.yellow
+
+
+
+
+
+
+
+};
+  //  final List<Map<String, dynamic>> allColors = [
+  // {'name':'Beige', 'color': const Color(0xFFE8D8B5)},
+  // {'name':'Black', 'color': Colors.black},
+  // {'name':'Blue', 'color': Colors.blue},
+  // {'name':'Brown', 'color': Colors.brown},
+  // {'name':'Clear', 'color': const Color.fromARGB(255, 235, 240, 255)},
+  // {'name':'Gold', 'color': const Color.fromARGB(255, 191, 162, 0)},
+  // {'name':'Gray', 'color': const Color.fromARGB(255, 141, 141, 133)},
+  // {'name':'Green', 'color': Colors.green},
+  // {'name':'Multicolored', 'color': const Color(0xFFF4F4DC)},
+  // {'name':'Off-white', 'color': const Color(0xFFF2F2F2)},
+  // {'name':'Orange', 'color': Colors.orange},
+  // {'name':'Pink', 'color': const Color.fromARGB(255, 255, 110, 158)},
+  // {'name':'Purple', 'color': Colors.purple},
+  // {'name':'Red', 'color': Colors.red},
+  // {'name':'Silver', 'color': const Color.fromARGB(255, 75, 75, 62)},
+  // {'name':'White', 'color': Colors.white},
+  // {'name':'Yellow', 'color': Colors.yellow},
+  // ];
   List<String> selectedColorNames = [];
 
-  Widget colorSheet(){
-    //defining tempColorNames need to be done outside of builder so to not immediately deselect colors
-     List<String> tempColorNames = List.from(selectedColorNames); //temporary color selection list is used until validated with submit button
-    return StatefulBuilder(
-    builder: (context, setSheetState) {
+  // Widget colorSheet(){
+  //   //defining tempColorNames need to be done outside of builder so to not immediately deselect colors
+  //    List<String> tempColorNames = List.from(selectedColorNames); //temporary color selection list is used until validated with submit button
+  //   return StatefulBuilder(
+  //   builder: (context, setSheetState) {
    
-    return SizedBox(
-          height: 400,
-           width: double.infinity, //fulll width
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start ,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
-            child: Row( //padding only accepts one child, so a row allows for multiple buttons to be held side by side
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children:[
+  //   return SizedBox(
+  //         height: 400,
+  //          width: double.infinity, //fulll width
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start ,
+  //           children: [
+  //             Padding(
+  //               padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
+  //           child: Row( //padding only accepts one child, so a row allows for multiple buttons to be held side by side
+  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //             children:[
 
-                //three buttons to interact with filter options: close, clear, and submit
-              ElevatedButton(
-                //Close button will discard pop the buttomSheet and discard any temporary selection made without Submit button
-              child: const Text('Close'),
-              onPressed: () => Navigator.pop(context,false), //it's false because it's not the "submit button"
-            ),
+  //               //three buttons to interact with filter options: close, clear, and submit
+  //             ElevatedButton(
+  //               //Close button will discard pop the buttomSheet and discard any temporary selection made without Submit button
+  //             child: const Text('Close'),
+  //             onPressed: () => Navigator.pop(context,false), //it's false because it's not the "submit button"
+  //           ),
 
-            ElevatedButton(
-              child: const Text('Clear'),
-              onPressed: () => setSheetState((){ //clearly clear the selected colors saved in the sheet
-                tempColorNames.clear();
-    }),
-            ),
+  //           ElevatedButton(
+  //             child: const Text('Clear'),
+  //             onPressed: () => setSheetState((){ //clearly clear the selected colors saved in the sheet
+  //               tempColorNames.clear();
+  //   }),
+  //           ),
 
-    ElevatedButton(
-              child: const Text('Submit'),
-              onPressed: () {
-                setState(() => selectedColorNames = tempColorNames);
-              Navigator.pop(context, true); //it's true because it's the "submit" button
-              },
+  //   ElevatedButton(
+  //             child: const Text('Submit'),
+  //             onPressed: () {
+  //               setState(() => selectedColorNames = tempColorNames);
+  //             Navigator.pop(context, true); //it's true because it's the "submit" button
+  //             },
   
-    ),
-              ],
-            ),
+  //   ),
+  //             ],
+  //           ),
               
 
    
@@ -522,73 +566,73 @@ String ? selectedOccasion; //null means all occasions
 
 
 
-          ),
-          Expanded( //fill everything underneath close button
-          child: ListView( //like a Column() with the addition of being scrollable
-          padding: const EdgeInsets.symmetric(horizontal: 18), //so that CircleAvatars  are not being cut off by screen
-          children: allColors.map((item) {
-                final isSelected = tempColorNames.contains(item['name']);
-                return Column(
-                  children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Checkbox( //select color when little box is pressed on color selector
-                        value: isSelected,
-                        activeColor: const Color(0xFF2D3561),
-                        onChanged: (_) => setSheetState(() {
-                          if (isSelected){
-                      tempColorNames.remove(item['name']); // if box already checked, this will unckeck it 
-                    } else {
-                      tempColorNames.add(item['name']); //if box if not checked, this will check it 
-                    }
-                        }),
-                    ),
-                    title: Text(item['name']),
-                    trailing: Container( //color icons (CircleAvatars) black border
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 2
+  //         ),
+  //         Expanded( //fill everything underneath close button
+  //         child: ListView( //like a Column() with the addition of being scrollable
+  //         padding: const EdgeInsets.symmetric(horizontal: 18), //so that CircleAvatars  are not being cut off by screen
+  //         children: allColors.map((item) {
+  //               final isSelected = tempColorNames.contains(item['name']);
+  //               return Column(
+  //                 children: [
+  //                   ListTile(
+  //                     contentPadding: EdgeInsets.zero,
+  //                     leading: Checkbox( //select color when little box is pressed on color selector
+  //                       value: isSelected,
+  //                       activeColor: const Color(0xFF2D3561),
+  //                       onChanged: (_) => setSheetState(() {
+  //                         if (isSelected){
+  //                     tempColorNames.remove(item['name']); // if box already checked, this will unckeck it 
+  //                   } else {
+  //                     tempColorNames.add(item['name']); //if box if not checked, this will check it 
+  //                   }
+  //                       }),
+  //                   ),
+  //                   title: Text(item['name']),
+  //                   trailing: Container( //color icons (CircleAvatars) black border
+  //                     decoration: BoxDecoration(
+  //                       shape: BoxShape.circle,
+  //                       border: Border.all(
+  //                         color: Colors.black,
+  //                         width: 2
                         
-                      ),
-                      ),
-                      child: CircleAvatar( //multicolored icon imported jpeg
-                        radius: 14,
-                        backgroundColor: item['name'] == 'Multicolored' 
-                        ? Colors.transparent
-                        : item['color'] as Color,
-                        backgroundImage: item['name'] == 'Multicolored'
-                        ? const AssetImage('assets/icons/multi.png')
-                        :null,
+  //                     ),
+  //                     ),
+  //                     child: CircleAvatar( //multicolored icon imported jpeg
+  //                       radius: 14,
+  //                       backgroundColor: item['name'] == 'Multicolored' 
+  //                       ? Colors.transparent
+  //                       : item['color'] as Color,
+  //                       backgroundImage: item['name'] == 'Multicolored'
+  //                       ? const AssetImage('assets/icons/multi.png')
+  //                       :null,
                       
-                        ),
-                    ),
+  //                       ),
+  //                   ),
                       
 
-                    onTap: () => setSheetState(() { //select color when tapping anywhere on that specific row
-                      if (isSelected) {
-                        tempColorNames.remove(item['name']);
-                      } else{
-                        tempColorNames.add(item['name']);
-                      }
-                    }),
+  //                   onTap: () => setSheetState(() { //select color when tapping anywhere on that specific row
+  //                     if (isSelected) {
+  //                       tempColorNames.remove(item['name']);
+  //                     } else{
+  //                       tempColorNames.add(item['name']);
+  //                     }
+  //                   }),
               
-                  ),
+  //                 ),
                     
                   
-                  const Divider (height: 1),
-                  ],
-                );
-              }).toList(),
-          ),
-          ),
-          ],
-    ),
-    );
-  },
-  );
-  }
+  //                 const Divider (height: 1),
+  //                 ],
+  //               );
+  //             }).toList(),
+  //         ),
+  //         ),
+  //         ],
+  //   ),
+  //   );
+  // },
+  // );
+  // }
 
 final List<String> types = ['Tops', 'Bottoms', 'Outerwear', 'Shoes', 'Accessories','Dresses'];
 String ? selectedType; //null means all item types
@@ -681,6 +725,128 @@ String ? selectedType; //null means all item types
   }
     );
   }
+
+
+  Widget filterSelectionSheet(List<String> filterOptions, Set<String> currentlyChosenFilters, 
+              void Function(Set<String> newChosenFilters) onSubmit,
+              {Widget Function(String optionName) ? iconCreatorFunction}){ //make the iconCreatorFunction optional
+     Set<String> tempChosenOptions = Set.from(currentlyChosenFilters); //temporary selection list is used until validated with submit button
+    return StatefulBuilder(
+    builder: (context, setSheetState) {
+   
+    return SizedBox(
+          height: 400,
+           width: double.infinity, //fulll width
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start ,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12), //place close button at the top left of the bottomsheet
+            child: Row( //padding only accepts one child, so a row allows for multiple buttons to be held side by side
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children:[
+
+                //three buttons to interact with filter options: close, clear, and submit
+              ElevatedButton(
+                //Close button will discard pop the buttomSheet and discard any temporary selection made without Submit button
+              child: const Text('Close'),
+              onPressed: () => Navigator.pop(context,false), //it's false because it's not the "submit button"
+            ),
+
+            ElevatedButton(
+              child: const Text('Clear'),
+              onPressed: () => setSheetState((){ //clearly clear the selected colors saved in the sheet
+                tempChosenOptions.clear();
+    }),
+            ),
+
+    ElevatedButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                onSubmit(tempChosenOptions);
+                Navigator.pop(context, true); //it's true because it's the "submit" button
+              },
+  
+    ),
+              ],
+            ),
+            
+          ),
+          Expanded( //fill everything underneath close button
+          child: ListView( //like a Column() with the addition of being scrollable
+          padding: const EdgeInsets.symmetric(horizontal: 18), //so that CircleAvatars  are not being cut off by screen
+          children: filterOptions.map((filterOption) {
+                final isSelected = tempChosenOptions.contains(filterOption);
+                return Column(
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Checkbox( //select color when little box is pressed on color selector
+                        value: isSelected,
+                        activeColor: const Color(0xFF2D3561),
+                        onChanged: (_) => setSheetState(() {
+                          if (isSelected){
+                            tempChosenOptions.remove(filterOption); // if box already checked, this will unckeck it 
+                          } else {
+                            tempChosenOptions.add(filterOption); //if box if not checked, this will check it 
+                          }
+                        }),
+                    ),
+                    title: Text(filterOption),
+                    trailing: iconCreatorFunction == null ? null: //if no icon function was given, show nothing. Otherwise, show the circle avatar
+                     Container( //color icons (CircleAvatars) black border
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.black,
+                          width: 2
+                        
+                      ),
+                      ),
+                      child: iconCreatorFunction!(filterOption) //since it was checked previously that the parameter was not null, we can guarantee that it is not null here
+                      //  CircleAvatar( //multicolored icon imported jpeg
+                      //   radius: 14,
+                      //   backgroundColor: item['name'] == 'Multicolored' 
+                      //   ? Colors.transparent
+                      //   : item['color'] as Color,
+                      //   backgroundImage: item['name'] == 'Multicolored'
+                      //   ? const AssetImage('assets/icons/multi.png')
+                      //   :null,
+                      
+                      //   ),
+                    ),
+                      
+
+                    onTap: () => setSheetState(() { //select color when tapping anywhere on that specific row
+                      if (isSelected) {
+                        tempChosenOptions.remove(filterOption);
+                      } else{
+                        tempChosenOptions.add(filterOption);
+                      }
+                    }),
+              
+                  ),
+                    
+                  
+                  const Divider (height: 1),
+                  ],
+                );
+              }).toList(),
+          ),
+          ),
+          ],
+    ),
+    );
+  },
+  );
+  }
+
+
+
+
+
+
+
 
 
 
@@ -807,10 +973,10 @@ String ? selectedType; //null means all item types
                       const Text('Filters', style: TextStyle(color: Colors.grey, fontSize: 13)),
                     ],
                   ),
-                  if (selectedSeason != null || selectedOccasion != null || selectedColorNames.isNotEmpty || selectedType != null)
+                  if (selectedSeason.isNotEmpty || selectedOccasion != null || selectedColorNames.isNotEmpty || selectedType != null)
                     GestureDetector(
                       onTap: () => setState(() {
-                        selectedSeason = null;
+                        selectedSeason = {}; //empty set
                         selectedOccasion = null;
                         selectedColorNames = [];
                         selectedType = null;
