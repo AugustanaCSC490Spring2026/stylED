@@ -2,6 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to photo your clothes</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need photo library access to upload your clothes
+We need photo library access to upload your clothes
+We need photo library access to upload your clothes
+We need photo library access to upload your clothes
+</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need photo library access to save your clothes photos</string>
+	<key>CFBundleGetInfoString</key>
+	<string></string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

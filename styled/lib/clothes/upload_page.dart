@@ -1,103 +1,199 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'dart:typed_data';
-import 'package:styled/auth/login_page.dart';
 
-class UploadPage extends StatefulWidget { //holds the properties passed in
-  final Map<String, dynamic>? existingClothingItem; //passing null when item is just being added or a map when opening a pre-exisiting item
-  const UploadPage({super.key, this.existingClothingItem}); //accepts the optional existing clothing item
+class UploadPage extends StatefulWidget {
+  final Map<String, dynamic>? existingClothingItem; // for edit mode
+
+  const UploadPage({super.key, this.existingClothingItem});
 
   @override
   State<UploadPage> createState() => _UploadPageState();
-
-
 }
-
-
 
 class _UploadPageState extends State<UploadPage> {
   Uint8List? _imageBytes;
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
   String? selectedType;
+  Color selectedColor = Colors.blue;
   Set<String> selectedColorNames = {};
   String selectedSeason = 'All Seasons';
   String selectedOccasion = 'Formal';
   DateTime? dateLastWorn;
   bool collectionOnly = false;
   bool isLoading = false;
-  bool? isTie; // null = not asked yet, true/false = user answered
 
-  final List<String> types = ['Tops','Bottoms','Outerwear','Shoes','Accessories','Dresses',];
-  final List<String> seasons = ['All Seasons','Winter','Summer','Fall','Spring',];
+  final List<String> types = [
+    'Tops',
+    'Bottoms',
+    'Outerwear',
+    'Shoes',
+    'Accessories',
+    'Dresses',
+  ];
+  final List<String> seasons = [
+    'All Seasons',
+    'Winter',
+    'Summer',
+    'Fall',
+    'Spring',
+  ];
   final List<String> occasions = ['Formal', 'Casual', 'Athletic'];
-  // final List<Color> colors = [
-  //   Colors.blue,
-  //   Colors.red,
-  //   Colors.green,
-  //   Colors.black,
-  //   Colors.white,
-  // ];
-  // final List<String> colorNames = ['Blue', 'Red', 'Green', 'Black', 'White'];
 
   final List<Map<String, dynamic>> allColors = [
-  {'name':'Beige', 'color': const Color(0xFFE8D8B5)},
-  {'name':'Black', 'color': Colors.black},
-  {'name':'Blue', 'color': Colors.blue},
-  {'name':'Brown', 'color': Colors.brown},
-  {'name':'Clear', 'color': const Color.fromARGB(255, 235, 240, 255)},
-  {'name':'Gold', 'color': const Color.fromARGB(255, 191, 162, 0)},
-  {'name':'Gray', 'color': const Color.fromARGB(255, 141, 141, 133)},
-  {'name':'Green', 'color': Colors.green},
-  {'name':'Multicolored', 'color': const Color(0xFFF4F4DC)},
-  {'name':'Off-white', 'color': const Color(0xFFF2F2F2)},
-  {'name':'Orange', 'color': Colors.orange},
-  {'name':'Pink', 'color': const Color.fromARGB(255, 255, 110, 158)},
-  {'name':'Purple', 'color': Colors.purple},
-  {'name':'Red', 'color': Colors.red},
-  {'name':'Silver', 'color': const Color.fromARGB(255, 75, 75, 62)},
-  {'name':'White', 'color': Colors.white},
-  {'name':'Yellow', 'color': Colors.yellow},
+    {'name': 'Beige', 'color': const Color(0xFFF5F5DC)},
+    {'name': 'Black', 'color': Colors.black},
+    {'name': 'Blue', 'color': Colors.blue},
+    {'name': 'Brown', 'color': Colors.brown},
+    {'name': 'Clear', 'color': Colors.white},
+    {'name': 'Gold', 'color': const Color.fromARGB(255, 191, 162, 0)},
+    {'name': 'Gray', 'color': const Color.fromARGB(255, 141, 141, 133)},
+    {'name': 'Green', 'color': Colors.green},
+    {'name': 'Multicolored', 'color': const Color(0xFFF4F4DC)},
+    {'name': 'Off-white', 'color': const Color(0xFFF5F5DC)},
+    {'name': 'Orange', 'color': Colors.orange},
+    {'name': 'Pink', 'color': Colors.pink},
+    {'name': 'Purple', 'color': Colors.purple},
+    {'name': 'Red', 'color': Colors.red},
+    {'name': 'Silver', 'color': const Color.fromARGB(255, 75, 75, 62)},
+    {'name': 'White', 'color': Colors.white},
+    {'name': 'Yellow', 'color': Colors.yellow},
   ];
 
   @override
-  void initState(){ //inherited method which will be modified to make changes in items that where already added by recovering their information
+  void initState() {
     super.initState();
-    
-
-    if(widget.existingClothingItem != null){ //if item was already added information is pre-filled
-
-    final item = widget.existingClothingItem!; //! confirms Dart that you know that the item isn't null
-    isTie = item['is_tie'] as bool?; //tie identification isn't lost when coming back to edit an item
-
-    //where the pre-filling actualling happens, if value is null use an empty string
-    nameController.text = item['name'] ?? '';
-    descriptionController.text = item['description'] ?? '';
-    selectedType = item['category'];
-    selectedSeason = item['season'] ?? 'All Seasons';
-    selectedOccasion = item['occasion'];
-
-    //since color names are stored in a single string, each separated by a comma, we need to split them back into individual naames
-    //converting these into a Set afterwards is necessary so that the right boxes are checked
-
-    selectedColorNames = Set.from((item ['color'] as String? ?? '').split(', ').where((c) => c.isNotEmpty)
-
-    );
+    // Pre-fill fields if we're in edit mode
+    final item = widget.existingClothingItem;
+    if (item != null) {
+      nameController.text = item['name'] ?? '';
+      descriptionController.text = item['description'] ?? '';
+      selectedType = item['category'];
+      selectedSeason = item['season'] ?? 'All Seasons';
+      selectedOccasion = item['occasion'] ?? 'Formal';
+      collectionOnly = item['collection_only'] ?? false;
+      if (item['color'] != null) {
+        selectedColorNames = Set.from(
+          (item['color'] as String).split(', ').where((c) => c.isNotEmpty),
+        );
+      }
+      if (item['dateLastWorn'] != null) {
+        dateLastWorn = DateTime.tryParse(item['dateLastWorn']);
+      }
     }
   }
 
   Future<void> pickImage() async {
     final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      final bytes = await image.readAsBytes();
-      setState(() {
-        _imageBytes = bytes;
-      });
-     // setState(() => _imageFile = File(image.path));
-    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Add Photo',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1a1a2e),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.camera,
+                      );
+                      if (image != null) {
+                        final bytes = await image.readAsBytes();
+                        setState(() => _imageBytes = bytes);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F2F5),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.camera_alt_outlined,
+                            size: 32,
+                            color: Color(0xFF2d3561),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Take Photo',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1a1a2e),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.gallery,
+                      );
+                      if (image != null) {
+                        final bytes = await image.readAsBytes();
+                        setState(() => _imageBytes = bytes);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F2F5),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.photo_library_outlined,
+                            size: 32,
+                            color: Color(0xFF2d3561),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Gallery',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1a1a2e),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> saveItem() async {
@@ -111,20 +207,10 @@ class _UploadPageState extends State<UploadPage> {
     setState(() => isLoading = true);
 
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      final userId = user?.id;
+      // Keep existing image by default in edit mode
+      String? imageUrl = widget.existingClothingItem?['image_url'];
 
-      if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in yet.')),
-      );
-      setState(() => isLoading = false);
-      return;
-    }
-
-      String? imageUrl;
-
-      // Upload image if selected
+      // Upload new image if one was picked
       if (_imageBytes != null) {
         final fileName = DateTime.now().millisecondsSinceEpoch.toString();
         final path = 'upload/$fileName.jpg';
@@ -136,50 +222,42 @@ class _UploadPageState extends State<UploadPage> {
             .getPublicUrl(path);
       }
 
-      final isEditing = widget.existingClothingItem != null;
-
-      if(isEditing){
-        //make sure that any updates to an already added clothing item are actually saved
-        //update clothing item map
-        await Supabase.instance.client.from('clothes').update({
-          'name': nameController.text.trim(),
-          'category': selectedType,
-          'is_tie': isTie ?? false,
-          'color': selectedColorNames.join(', '),
-          'season': selectedSeason,
-          'occasion': selectedOccasion,
-          'description': descriptionController.text.trim(),
-          'dateLastWorn': dateLastWorn?.toIso8601String().split('T')[0],
-          'collection_only': collectionOnly, //boolean: true or false
-          //image should only be updated if new one is picked
-
-          if(imageUrl != null) 'image_url':imageUrl,
-        })
-        .eq('itemId', widget.existingClothingItem!['itemId']);
-
-      }else{
-      // Save to clothes table
-      //insert new clothing item map
-      await Supabase.instance.client.from('clothes').insert({
+      final data = {
         'name': nameController.text.trim(),
         'category': selectedType,
-        'is_tie': isTie ?? false,
-        'color': selectedColorNames.join(', '), //Set<String> of color names that stores selected colors in the picker
+        'color': selectedColorNames.join(', '),
         'season': selectedSeason,
         'occasion': selectedOccasion,
         'description': descriptionController.text.trim(),
         'dateLastWorn': dateLastWorn?.toIso8601String().split('T')[0],
-        'timesWorn': 0,
         'image_url': imageUrl,
         'collection_only': collectionOnly,
-        'profile_id': userId,
-      });
+        'profile_id': Supabase.instance.client.auth.currentUser?.id, // ADD THIS
+      };
 
+      if (widget.existingClothingItem != null) {
+        // Edit mode — update existing row
+        await Supabase.instance.client
+            .from('clothes')
+            .update(data)
+            .eq('itemId', widget.existingClothingItem!['itemId']);
+      } else {
+        // Add mode — insert new row
+        await Supabase.instance.client.from('clothes').insert({
+          ...data,
+          'timesWorn': 0,
+        });
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Item saved to your closet!')),
+          SnackBar(
+            content: Text(
+              widget.existingClothingItem != null
+                  ? 'Item updated!'
+                  : 'Item saved to your closet!',
+            ),
+          ),
         );
         Navigator.pop(context);
       }
@@ -190,16 +268,11 @@ class _UploadPageState extends State<UploadPage> {
     }
 
     setState(() => isLoading = false);
-
-    
   }
 
   @override
   Widget build(BuildContext context) {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final isEditMode = widget.existingClothingItem != null;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -210,9 +283,9 @@ class _UploadPageState extends State<UploadPage> {
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1a1a2e)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text( //window title can't be hardcoded, should change depending on whether an item is being added or edited
-        widget.existingClothingItem != null ? 'Edit Item' : 'Add New Item', // two possible headers depending on whether the item had been previously added or not
-          style: TextStyle(
+        title: Text(
+          isEditMode ? 'Edit Item' : 'Add New Item',
+          style: const TextStyle(
             color: Color(0xFF1a1a2e),
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -245,6 +318,15 @@ class _UploadPageState extends State<UploadPage> {
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: Image.memory(_imageBytes!, fit: BoxFit.cover),
+                        )
+                      : isEditMode &&
+                            widget.existingClothingItem!['image_url'] != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            widget.existingClothingItem!['image_url'],
+                            fit: BoxFit.cover,
+                          ),
                         )
                       : const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -317,78 +399,50 @@ class _UploadPageState extends State<UploadPage> {
                               DropdownMenuItem(value: type, child: Text(type)),
                         )
                         .toList(),
-                    onChanged: (val) {
-                      setState(() => selectedType = val);
-                      if (val == 'Accessories') {
-                        tieQuestionPopUp();
-                        }
-
-                    }, 
+                    onChanged: (val) => setState(() => selectedType = val),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
 
-              //Color Widget
+              // Color
               _label('Color'),
               const SizedBox(height: 8),
-              ...allColors.map((item){
+              ...allColors.map((item) {
                 final isSelected = selectedColorNames.contains(item['name']);
                 return Column(
                   children: [
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Checkbox( //select color when little box is pressed on color selector
+                      leading: Checkbox(
                         value: isSelected,
                         activeColor: const Color(0xFF2D3561),
                         onChanged: (_) => setState(() {
-                          if (isSelected){
-                      selectedColorNames.remove(item['name']); // if box already checked, this will unckeck it 
-                    } else {
-                      selectedColorNames.add(item['name']); //if box if not checked, this will check it 
-                    }
+                          if (isSelected) {
+                            selectedColorNames.remove(item['name']);
+                          } else {
+                            selectedColorNames.add(item['name']);
+                          }
                         }),
-                    ),
-                    title: Text(item['name']),
-                    trailing: Container( //color icons black border
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 2
-                        )
                       ),
-                      child: CircleAvatar( //multicolored icon imported jpeg
+                      title: Text(item['name']),
+                      trailing: CircleAvatar(
+                        backgroundColor: item['color'] as Color,
                         radius: 14,
-                        backgroundColor: item['name'] == 'Multicolored' 
-                        ? Colors.transparent
-                        : item['color'] as Color,
-                        backgroundImage: item['name'] == 'Multicolored'
-                        ? const AssetImage('assets/icons/multi.png')
-                        :null,
-                      
-                        ),
+                      ),
+                      onTap: () => setState(() {
+                        if (isSelected) {
+                          selectedColorNames.remove(item['name']);
+                        } else {
+                          selectedColorNames.add(item['name']);
+                        }
+                      }),
                     ),
-                      
-
-                    onTap: () => setState(() { //select color when tapping anywhere on that specific row
-                      if (isSelected) {
-                        selectedColorNames.remove(item['name']);
-                      } else{
-                        selectedColorNames.add(item['name']);
-                      }
-                    }),
-              
-                  ),
-                    
-                  
-                  const Divider (height: 1),
+                    const Divider(height: 1),
                   ],
                 );
               }),
 
-
-              
               // Season
               _label('Season'),
               const SizedBox(height: 10),
@@ -559,7 +613,7 @@ class _UploadPageState extends State<UploadPage> {
                     Switch(
                       value: collectionOnly,
                       onChanged: (val) => setState(() => collectionOnly = val),
-                      activeColor: const Color(0xFF2d3561),
+                      activeThumbColor: const Color(0xFF2d3561),
                     ),
                   ],
                 ),
@@ -580,9 +634,9 @@ class _UploadPageState extends State<UploadPage> {
                   ),
                   child: isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Save Item',
-                          style: TextStyle(
+                      : Text(
+                          isEditMode ? 'Save Changes' : 'Save Item',
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -598,48 +652,6 @@ class _UploadPageState extends State<UploadPage> {
     );
   }
 
-  void tieQuestionPopUp() {
-    showDialog(
-    context: context,
-    barrierDismissible: true, // if you tap outside of popup you can dismiss it 
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text(
-        'Is this a tie?',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF1a1a2e),
-        ),
-      ),
-      actionsAlignment: MainAxisAlignment.spaceEvenly,
-      actions: [
-        TextButton(
-          onPressed: () {
-            setState(() => isTie = false); //assumes that the accessory is not a tie, meaning that ties have to be declared to be considered such
-            Navigator.pop(context);
-          },
-          child: const Text('No', style: TextStyle(color: Colors.grey)),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            setState(() => isTie = true);
-            Navigator.pop(context);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2d3561),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text('Yes', style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    ),
-  );
-  }
-
-
-
   Widget _label(String text) {
     return Text(
       text,
@@ -650,6 +662,4 @@ class _UploadPageState extends State<UploadPage> {
       ),
     );
   }
-
-  
 }

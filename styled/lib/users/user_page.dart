@@ -28,20 +28,41 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfileData() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      final profileResponse = await Supabase.instance.client
-        .from('profiles')
-        .select('name')
-        .eq('id', user.id)
-        .single();
-      final userName = profileResponse['name'];
-
       final email = user.email ?? '';
-      //final namePart = email.split('@').first;
-      final namePart = userName;
-      final parts = namePart.split('.');
-      String displayName = parts.isNotEmpty
-          ? parts.map((p) => p[0].toUpperCase() + p.substring(1)).join(' ')
-          : namePart;
+
+      // safely fetch name from profiles
+      String displayName = '';
+      try {
+        final profileResponse = await Supabase.instance.client
+            .from('profiles')
+            .select('name')
+            .eq('id', user.id)
+            .maybeSingle(); // use maybeSingle to avoid crash if row missing
+
+        final userName = profileResponse?['name'];
+
+        if (userName != null && userName.toString().isNotEmpty) {
+          final parts = userName.toString().split('.');
+          displayName = parts
+              .map(
+                (p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '',
+              )
+              .join(' ')
+              .trim();
+        } else {
+          // fallback to email if name is null
+          final namePart = email.split('@').first;
+          final parts = namePart.split('.');
+          displayName = parts
+              .map(
+                (p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '',
+              )
+              .join(' ')
+              .trim();
+        }
+      } catch (e) {
+        displayName = email.split('@').first;
+      }
 
       final createdAt = user.createdAt;
       final days = DateTime.now().difference(DateTime.parse(createdAt)).inDays;
@@ -55,15 +76,13 @@ class _ProfilePageState extends State<ProfilePage> {
             .from('outfits')
             .select()
             .eq('profile_id', user.id);
+
         Map<String, int> categoryCounts = {};
-          for (final item in clothesResponse) {
-            final category = item['category'] ?? 'Other';
-            if (categoryCounts.containsKey(category)) {
-              categoryCounts[category] = categoryCounts[category]! + 1;
-            } else {
-              categoryCounts[category] = 1;
-            }
-        };
+        for (final item in clothesResponse) {
+          final category = item['category'] ?? 'Other';
+          categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
+        }
+
         setState(() {
           _totalItems = (clothesResponse as List).length;
           _totalOutfits = (outfitResponse as List).length;
@@ -73,14 +92,12 @@ class _ProfilePageState extends State<ProfilePage> {
           _daysActive = days;
         });
       } catch (e) {
-        // ignore
+        setState(() {
+          _email = email;
+          _displayName = displayName;
+          _daysActive = days;
+        });
       }
-
-     /* setState(() {
-        _email = email;
-        _displayName = displayName;
-        _daysActive = days;
-      }); */
     }
   }
 
@@ -101,7 +118,6 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // Title
             Text(
               'Profile',
@@ -117,7 +133,6 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
 
-            
             const SizedBox(height: 24),
 
             // User Card
@@ -204,7 +219,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                 Expanded(
+                Expanded(
                   child: _ProfileStatCard(
                     value: '$_totalOutfits',
                     label: 'Outfits',
@@ -237,19 +252,16 @@ class _ProfilePageState extends State<ProfilePage> {
             Container(
               width: double.infinity,
               child: _categoryData.isEmpty
-              ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    'Add items to see your analytics!',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              )
-              : CategoryPieChart(categoryData: _categoryData,)
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Text(
+                          'Add items to see your analytics!',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                      ),
+                    )
+                  : CategoryPieChart(categoryData: _categoryData),
             ),
             const SizedBox(height: 16),
 
@@ -352,10 +364,7 @@ class _ProfileStatCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         ],
       ),
     );
@@ -415,4 +424,4 @@ class _ProfileMenuItem extends StatelessWidget {
       ),
     );
   }
-} 
+}
