@@ -69,7 +69,12 @@ class _HistoryPageState extends State<HistoryPage> {
 
         final Map<String, int> itemCount = {};
         for (final outfit in outfitResponse) {
-          for (final key in ['top_id', 'bottom_id', 'shoes_id', 'accessory_id']) {
+          for (final key in [
+            'top_id',
+            'bottom_id',
+            'shoes_id',
+            'accessory_id',
+          ]) {
             final id = outfit[key]?.toString();
             if (id != null) itemCount[id] = (itemCount[id] ?? 0) + 1;
           }
@@ -92,7 +97,9 @@ class _HistoryPageState extends State<HistoryPage> {
 
         final Map<String, int> breakdown = {};
         for (Map<String, dynamic> item in items) {
-          final category = (item['category'] is String) ? item['category'] : 'Other';
+          final category = (item['category'] is String)
+              ? item['category']
+              : 'Other';
           breakdown[category] = (breakdown[category] ?? 0) + 1;
         }
 
@@ -137,26 +144,43 @@ class _HistoryPageState extends State<HistoryPage> {
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   void _onDayTapped(DateTime day) {
-    setState(() => _selectedDay = day);
-    final key = _dateKey(day);
+    final tappedDay = DateTime(day.year, day.month, day.day);
+    final key = _dateKey(tappedDay);
     final now = DateTime.now();
-    final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
-    final isPast = day.isBefore(DateTime(now.year, now.month, now.day));
+    final today = DateTime(now.year, now.month, now.day);
+    final isPast = tappedDay.isBefore(today);
+    final isToday = tappedDay == today;
+
+    setState(() => _selectedDay = tappedDay);
 
     if (isPast || isToday) {
-      // show worn outfit if exists
       final outfit = _outfitsByDate[key];
-      _showDayBottomSheet(day, outfit, isPast: true);
+      _showDayBottomSheet(tappedDay, outfit, isPast: true);
     } else {
-      // future — plan an outfit
       final planned = _plannedOutfits[key];
-      _showDayBottomSheet(day, planned, isPast: false);
+      _showDayBottomSheet(tappedDay, planned, isPast: false);
     }
   }
 
-  void _showDayBottomSheet(DateTime day, Map<String, dynamic>? outfit, {required bool isPast}) {
-    final months = ['January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'];
+  void _showDayBottomSheet(
+    DateTime day,
+    Map<String, dynamic>? outfit, {
+    required bool isPast,
+  }) {
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
     final dateLabel = '${months[day.month - 1]} ${day.day}, ${day.year}';
 
     showModalBottomSheet(
@@ -167,135 +191,155 @@ class _HistoryPageState extends State<HistoryPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return StatefulBuilder(builder: (context, setSheetState) {
-          return Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        dateLabel,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1a1a2e),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isPast
+                              ? const Color(0xFFF0F2F5)
+                              : const Color(0xFFEEF0FF),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          isPast ? 'Worn' : 'Planned',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isPast
+                                ? Colors.grey
+                                : const Color(0xFF2d3561),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (outfit != null) ...[
+                    // show outfit name
                     Text(
-                      dateLabel,
+                      outfit['name'] ?? 'Outfit',
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                         color: Color(0xFF1a1a2e),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isPast ? const Color(0xFFF0F2F5) : const Color(0xFFEEF0FF),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        isPast ? 'Worn' : 'Planned',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isPast ? Colors.grey : const Color(0xFF2d3561),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                if (outfit != null) ...[
-                  // show outfit name
-                  Text(
-                    outfit['name'] ?? 'Outfit',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1a1a2e),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Items in this outfit:',
-                    style: TextStyle(fontSize: 13, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (outfit['top_id'] != null)
-                        _outfitChip('Top', outfit['top_id'].toString()),
-                      if (outfit['bottom_id'] != null)
-                        _outfitChip('Bottom', outfit['bottom_id'].toString()),
-                      if (outfit['shoes_id'] != null)
-                        _outfitChip('Shoes', outfit['shoes_id'].toString()),
-                      if (outfit['accessory_id'] != null)
-                        _outfitChip('Accessory', outfit['accessory_id'].toString()),
-                    ],
-                  ),
-                  if (!isPast) ...[
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _showPlanPicker(day);
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF2d3561)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text('Change Outfit',
-                            style: TextStyle(color: Color(0xFF2d3561))),
-                      ),
-                    ),
-                  ],
-                ] else ...[
-                  if (isPast)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
-                        child: Text(
-                          'No outfit recorded for this day.',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
-                        ),
-                      ),
-                    )
-                  else ...[
+                    const SizedBox(height: 8),
                     const Text(
-                      'No outfit planned yet.',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                      'Items in this outfit:',
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _showPlanPicker(day);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2d3561),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (outfit['top_id'] != null)
+                          _outfitChip('Top', outfit['top_id'].toString()),
+                        if (outfit['bottom_id'] != null)
+                          _outfitChip('Bottom', outfit['bottom_id'].toString()),
+                        if (outfit['shoes_id'] != null)
+                          _outfitChip('Shoes', outfit['shoes_id'].toString()),
+                        if (outfit['accessory_id'] != null)
+                          _outfitChip(
+                            'Accessory',
+                            outfit['accessory_id'].toString(),
+                          ),
+                      ],
+                    ),
+                    if (!isPast) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _showPlanPicker(day);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFF2d3561)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Change Outfit',
+                            style: TextStyle(color: Color(0xFF2d3561)),
+                          ),
                         ),
-                        child: const Text('Plan an Outfit',
-                            style: TextStyle(color: Colors.white)),
                       ),
-                    ),
+                    ],
+                  ] else ...[
+                    if (isPast)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Text(
+                            'No outfit recorded for this day.',
+                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
+                        ),
+                      )
+                    else ...[
+                      const Text(
+                        'No outfit planned yet.',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _showPlanPicker(day);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2d3561),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Plan an Outfit',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
+                  const SizedBox(height: 8),
                 ],
-                const SizedBox(height: 8),
-              ],
-            ),
-          );
-        });
+              ),
+            );
+          },
+        );
       },
-    );
+    ).whenComplete(() {
+      setState(() => _selectedDay = null);
+    });
   }
 
   void _showPlanPicker(DateTime day) {
@@ -329,8 +373,10 @@ class _HistoryPageState extends State<HistoryPage> {
                   const SizedBox(height: 16),
                   _savedOutfits.isEmpty
                       ? const Center(
-                          child: Text('No saved outfits yet.',
-                              style: TextStyle(color: Colors.grey)),
+                          child: Text(
+                            'No saved outfits yet.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         )
                       : Expanded(
                           child: ListView.builder(
@@ -348,7 +394,8 @@ class _HistoryPageState extends State<HistoryPage> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                          '${outfit['name'] ?? 'Outfit'} planned!'),
+                                        '${outfit['name'] ?? 'Outfit'} planned!',
+                                      ),
                                       backgroundColor: const Color(0xFF2d3561),
                                     ),
                                   );
@@ -360,7 +407,8 @@ class _HistoryPageState extends State<HistoryPage> {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                        color: const Color(0xFFE0E0E0)),
+                                      color: const Color(0xFFE0E0E0),
+                                    ),
                                   ),
                                   child: Row(
                                     children: [
@@ -369,12 +417,15 @@ class _HistoryPageState extends State<HistoryPage> {
                                         height: 44,
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFEEF0FF),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
-                                        child: const Icon(Icons.checkroom,
-                                            color: Color(0xFF2d3561),
-                                            size: 20),
+                                        child: const Icon(
+                                          Icons.checkroom,
+                                          color: Color(0xFF2d3561),
+                                          size: 20,
+                                        ),
                                       ),
                                       const SizedBox(width: 12),
                                       Text(
@@ -418,12 +469,27 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildCalendar() {
     final now = DateTime.now();
     final firstDay = DateTime(_focusedMonth.year, _focusedMonth.month, 1);
-    final daysInMonth =
-        DateTime(_focusedMonth.year, _focusedMonth.month + 1, 0).day;
+    final daysInMonth = DateTime(
+      _focusedMonth.year,
+      _focusedMonth.month + 1,
+      0,
+    ).day;
     final startWeekday = firstDay.weekday % 7; // 0 = Sunday
 
-    final months = ['January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'];
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -442,10 +508,11 @@ class _HistoryPageState extends State<HistoryPage> {
               GestureDetector(
                 onTap: () => setState(() {
                   _focusedMonth = DateTime(
-                      _focusedMonth.year, _focusedMonth.month - 1);
+                    _focusedMonth.year,
+                    _focusedMonth.month - 1,
+                  );
                 }),
-                child: const Icon(Icons.chevron_left,
-                    color: Color(0xFF2d3561)),
+                child: const Icon(Icons.chevron_left, color: Color(0xFF2d3561)),
               ),
               Text(
                 '${months[_focusedMonth.month - 1]} ${_focusedMonth.year}',
@@ -458,10 +525,14 @@ class _HistoryPageState extends State<HistoryPage> {
               GestureDetector(
                 onTap: () => setState(() {
                   _focusedMonth = DateTime(
-                      _focusedMonth.year, _focusedMonth.month + 1);
+                    _focusedMonth.year,
+                    _focusedMonth.month + 1,
+                  );
                 }),
-                child: const Icon(Icons.chevron_right,
-                    color: Color(0xFF2d3561)),
+                child: const Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFF2d3561),
+                ),
               ),
             ],
           ),
@@ -471,18 +542,20 @@ class _HistoryPageState extends State<HistoryPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-                .map((d) => SizedBox(
-                      width: 36,
-                      child: Text(
-                        d,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey,
-                        ),
+                .map(
+                  (d) => SizedBox(
+                    width: 36,
+                    child: Text(
+                      d,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey,
                       ),
-                    ))
+                    ),
+                  ),
+                )
                 .toList(),
           ),
           const SizedBox(height: 8),
@@ -500,13 +573,19 @@ class _HistoryPageState extends State<HistoryPage> {
               if (index < startWeekday) return const SizedBox();
 
               final day = index - startWeekday + 1;
-              final date = DateTime(_focusedMonth.year, _focusedMonth.month, day);
+              final date = DateTime(
+                _focusedMonth.year,
+                _focusedMonth.month,
+                day,
+              );
               final dateKey = _dateKey(date);
 
-              final isToday = date.year == now.year &&
+              final isToday =
+                  date.year == now.year &&
                   date.month == now.month &&
                   date.day == now.day;
-              final isSelected = _selectedDay != null &&
+              final isSelected =
+                  _selectedDay != null &&
                   date.year == _selectedDay!.year &&
                   date.month == _selectedDay!.month &&
                   date.day == _selectedDay!.day;
@@ -521,8 +600,8 @@ class _HistoryPageState extends State<HistoryPage> {
                     color: isSelected
                         ? const Color(0xFF2d3561)
                         : isToday
-                            ? const Color(0xFFEEF0FF)
-                            : Colors.transparent,
+                        ? const Color(0xFFEEF0FF)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -549,8 +628,8 @@ class _HistoryPageState extends State<HistoryPage> {
                             color: isSelected
                                 ? Colors.white
                                 : hasWorn
-                                    ? const Color(0xFF2d3561)
-                                    : const Color(0xFFEF9F27),
+                                ? const Color(0xFF2d3561)
+                                : const Color(0xFFEF9F27),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -567,20 +646,32 @@ class _HistoryPageState extends State<HistoryPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 8, height: 8,
+                width: 8,
+                height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF2d3561), shape: BoxShape.circle),
+                  color: Color(0xFF2d3561),
+                  shape: BoxShape.circle,
+                ),
               ),
               const SizedBox(width: 4),
-              const Text('Worn', style: TextStyle(fontSize: 11, color: Colors.grey)),
+              const Text(
+                'Worn',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
               const SizedBox(width: 16),
               Container(
-                width: 8, height: 8,
+                width: 8,
+                height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEF9F27), shape: BoxShape.circle),
+                  color: Color(0xFFEF9F27),
+                  shape: BoxShape.circle,
+                ),
               ),
               const SizedBox(width: 4),
-              const Text('Planned', style: TextStyle(fontSize: 11, color: Colors.grey)),
+              const Text(
+                'Planned',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
             ],
           ),
         ],
@@ -596,7 +687,6 @@ class _HistoryPageState extends State<HistoryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // ── Title row + calendar icon ─────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -656,7 +746,9 @@ class _HistoryPageState extends State<HistoryPage> {
                     child: Container(
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFF2d3561)
@@ -764,8 +856,11 @@ class _HistoryPageState extends State<HistoryPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.lightbulb_outline,
-                        color: Color(0xFF854F0B), size: 18),
+                    const Icon(
+                      Icons.lightbulb_outline,
+                      color: Color(0xFF854F0B),
+                      size: 18,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -813,14 +908,20 @@ class _BarChart extends StatelessWidget {
           return Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text('$count',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              Text(
+                '$count',
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
               const SizedBox(height: 4),
               if (item['image_url'] != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(item['image_url'],
-                      width: 44, height: 44, fit: BoxFit.cover),
+                  child: Image.network(
+                    item['image_url'],
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.cover,
+                  ),
                 )
               else
                 Container(
@@ -830,8 +931,11 @@ class _BarChart extends StatelessWidget {
                     color: const Color(0xFFEEF0FF),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.checkroom,
-                      color: Color(0xFF2d3561), size: 20),
+                  child: const Icon(
+                    Icons.checkroom,
+                    color: Color(0xFF2d3561),
+                    size: 20,
+                  ),
                 ),
               const SizedBox(height: 4),
               Container(
@@ -898,14 +1002,28 @@ class _LineChart extends StatelessWidget {
                     return const SizedBox();
                   }
                   final parts = dateLabels[index].split('-');
-                  final months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May',
-                      'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                  final months = [
+                    '',
+                    'Jan',
+                    'Feb',
+                    'Mar',
+                    'Apr',
+                    'May',
+                    'Jun',
+                    'Jul',
+                    'Aug',
+                    'Sep',
+                    'Oct',
+                    'Nov',
+                    'Dec',
+                  ];
                   final label = months[int.parse(parts[1])];
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: Text(label,
-                        style: const TextStyle(
-                            fontSize: 10, color: Colors.grey)),
+                    child: Text(
+                      label,
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
                   );
                 },
               ),
@@ -920,10 +1038,8 @@ class _LineChart extends StatelessWidget {
                 ),
               ),
             ),
-            topTitles:
-                AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           lineBarsData: [
             LineChartBarData(
