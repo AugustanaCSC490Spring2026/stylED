@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/login_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:styled/history/category_pie_chart.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,6 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   int _totalItems = 0;
   int _daysActive = 0;
   int _totalOutfits = 0;
+  Map<String, int> _categoryData = {};
 
   @override
   void initState() {
@@ -53,9 +55,19 @@ class _ProfilePageState extends State<ProfilePage> {
             .from('outfits')
             .select()
             .eq('profile_id', user.id);
+        Map<String, int> categoryCounts = {};
+          for (final item in clothesResponse) {
+            final category = item['category'] ?? 'Other';
+            if (categoryCounts.containsKey(category)) {
+              categoryCounts[category] = categoryCounts[category]! + 1;
+            } else {
+              categoryCounts[category] = 1;
+            }
+        };
         setState(() {
           _totalItems = (clothesResponse as List).length;
           _totalOutfits = (outfitResponse as List).length;
+          _categoryData = categoryCounts;
           _email = email;
           _displayName = displayName;
           _daysActive = days;
@@ -105,6 +117,7 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
 
+            
             const SizedBox(height: 24),
 
             // User Card
@@ -208,6 +221,37 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
 
             const SizedBox(height: 24),
+
+            // Closet Analytics
+            const Text(
+              'Closet Analytics',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1a1a2e),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Container(
+              width: double.infinity,
+              child: _categoryData.isEmpty
+              ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    'Add items to see your analytics!',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              )
+              : CategoryPieChart(categoryData: _categoryData,)
+            ),
+            const SizedBox(height: 16),
 
             // Privacy & Security Section
             const Text(

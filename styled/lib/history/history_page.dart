@@ -263,41 +263,6 @@ class _HistoryPageState extends State<HistoryPage> {
 
             const SizedBox(height: 20),
 
-            // Closet Analytics
-            const Text(
-              'Closet Analytics',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1a1a2e),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              // if no categories have been loaded yet, then show place holder text, else show the chart
-              child: _categoryBreakdown.isEmpty
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
-                        child: Text(
-                          'Add items to see your analytics!',
-                          style: TextStyle(color: Colors.grey, fontSize: 13),
-                        ),
-                      ),
-                    )
-                  : CategoryPieChart(categoryData: _categoryBreakdown),
-                ),
-
-            const SizedBox(height: 16),
-
             const Text(
               'Items Added Over Time',
               style: TextStyle(
@@ -309,10 +274,20 @@ class _HistoryPageState extends State<HistoryPage> {
             
             const SizedBox(height: 12),
 
-            _LineChart(
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: _LineChart(
               dataSpot: _addedPerMonth,
               dateLabels: _addedDateLabels,
             ),
+          ),
+            
 
             // Insight Card
             if (_totalItems > 0 && _notWornPercent > 0)
@@ -320,7 +295,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFAEEDA),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: const Color(0xFFEF9F27)),
                 ),
