@@ -26,80 +26,74 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadProfileData() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      final email = user.email ?? '';
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user != null) {
+    final email = user.email ?? '';
+    String displayName = '';
 
-      // safely fetch name from profiles
-      String displayName = '';
-      try {
-        final profileResponse = await Supabase.instance.client
-            .from('profiles')
-            .select('name')
-            .eq('id', user.id)
-            .maybeSingle(); // use maybeSingle to avoid crash if row missing
+    try {
+      final profileResponse = await Supabase.instance.client
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .maybeSingle();
 
-        final userName = profileResponse?['name'];
+      final userName = profileResponse?['name'];
 
-        if (userName != null && userName.toString().isNotEmpty) {
-          final parts = userName.toString().split('.');
-          displayName = parts
-              .map(
-                (p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '',
-              )
-              .join(' ')
-              .trim();
-        } else {
-          // fallback to email if name is null
-          final namePart = email.split('@').first;
-          final parts = namePart.split('.');
-          displayName = parts
-              .map(
-                (p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '',
-              )
-              .join(' ')
-              .trim();
-        }
-      } catch (e) {
-        displayName = email.split('@').first;
+      if (userName != null && userName.toString().isNotEmpty) {
+        final parts = userName.toString().split('.');
+        displayName = parts
+            .map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '')
+            .join(' ')
+            .trim();
+      } else {
+        final namePart = email.split('@').first;
+        final parts = namePart.split('.');
+        displayName = parts
+            .map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '')
+            .join(' ')
+            .trim();
+      }
+    } catch (e) {
+      displayName = email.split('@').first;
+    }
+
+    final createdAt = user.createdAt;
+    final days = DateTime.now().difference(DateTime.parse(createdAt)).inDays;
+
+    try {
+      final clothesResponse = await Supabase.instance.client
+          .from('clothes')
+          .select()
+          .eq('profile_id', user.id);
+      final outfitResponse = await Supabase.instance.client
+          .from('outfits')
+          .select()
+          .eq('profile_id', user.id);
+
+      Map<String, int> categoryCounts = {};
+      for (final item in clothesResponse) {
+        final category = item['category'] ?? 'Other';
+        categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
       }
 
-      final createdAt = user.createdAt;
-      final days = DateTime.now().difference(DateTime.parse(createdAt)).inDays;
-
-      try {
-        final clothesResponse = await Supabase.instance.client
-            .from('clothes')
-            .select()
-            .eq('profile_id', user.id);
-        final outfitResponse = await Supabase.instance.client
-            .from('outfits')
-            .select()
-            .eq('profile_id', user.id);
-
-        Map<String, int> categoryCounts = {};
-        for (final item in clothesResponse) {
-          final category = item['category'] ?? 'Other';
-          categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
-        }
-
-        setState(() {
-          _totalItems = (clothesResponse as List).length;
-          _totalOutfits = (outfitResponse as List).length;
-          _categoryData = categoryCounts;
-          _email = email;
-          _displayName = displayName;
-          _daysActive = days;
-        });
-      } catch (e) {
-        setState(() {
-          _email = email;
-          _displayName = displayName;
-          _daysActive = days;
-        });
-      }
+      setState(() {
+        _totalItems = (clothesResponse as List).length;
+        _totalOutfits = (outfitResponse as List).length;
+        _categoryData = categoryCounts;
+        _email = email;
+        _displayName = displayName;
+        _daysActive = days;
+      });
+    } catch (e) {
+      setState(() {
+        _email = email;
+        _displayName = displayName;
+        _daysActive = days;
+      });
     }
   }
+}
 
   String _getInitials() {
     if (_displayName.isEmpty) return '?';
