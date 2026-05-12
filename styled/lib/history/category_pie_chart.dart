@@ -37,7 +37,7 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
     return AspectRatio(
       aspectRatio: 1.3,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -46,7 +46,7 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
         child: Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 DropdownButton<String>(
                   value: display_mode,
@@ -129,7 +129,7 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
 
                   // pie chart legend
                   Expanded(
-                    flex: 1,
+                    flex: 0,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,12 +148,13 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               // category name
                               Text(
                                 entry.key,
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
                                   color: Color(0xFF1a1a2e),
                                 ),
                               ),
