@@ -27,18 +27,18 @@ class _DigitalClosetState extends State<DigitalCloset> {
   void clearAllFilters() {
     setState(() {
       selectedSeason = {};
-      selectedOccasion = null;
+      selectedOccasion = {};
       selectedColorNames.clear();
-      selectedType = null;
+      selectedType = {};
       selectedFilter = null;
     });
   }
 
   bool get hasActiveFilters {
     return selectedSeason.isNotEmpty ||
-        selectedOccasion != null ||
+        selectedOccasion.isNotEmpty ||
         selectedColorNames.isNotEmpty ||
-        selectedType != null;
+        selectedType.isNotEmpty;
   }
 
   List<Map<String, dynamic>> allItems = [];
@@ -240,7 +240,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
       final matchesSeason =
           selectedSeason.isEmpty || selectedSeason.contains(item['season']);
       final matchesOccasion =
-          selectedOccasion == null || item['occasion'] == selectedOccasion;
+          selectedOccasion.isEmpty || selectedOccasion.contains(item ['occasion']);
       final matchesColor =
           selectedColorNames.isEmpty ||
           selectedColorNames.any(
@@ -248,7 +248,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                 (item['color'] as String? ?? '').split(', ').contains(color),
           );
       final matchesType =
-          selectedType == null || item['category'] == selectedType;
+          selectedType.isEmpty || selectedType.contains(item['category']);
       return matchesSearch &&
           matchesSeason &&
           matchesOccasion &&
@@ -269,7 +269,11 @@ class _DigitalClosetState extends State<DigitalCloset> {
               (chosenItems) => setState(() => selectedSeason = chosenItems),
             );
           case 'Occasion':
-            return occasionSheet();
+            return filterSelectionSheet(
+              occasions,
+              selectedOccasion,
+              (chosenItems) => setState(() => selectedOccasion = chosenItems),
+            );
           case 'Color':
             return filterSelectionSheet(
               allColorsMap.keys.toList(),
@@ -287,7 +291,11 @@ class _DigitalClosetState extends State<DigitalCloset> {
               ),
             );
           case 'Type':
-            return typeSheet();
+            return filterSelectionSheet(
+              types,
+              selectedType,
+              (chosenItems) => setState(() => selectedType = chosenItems),
+            );
           default:
             return const SizedBox();
         }
@@ -303,166 +311,167 @@ class _DigitalClosetState extends State<DigitalCloset> {
   final List<String> seasons = ['Winter', 'Summer', 'Fall', 'Spring'];
   Set<String> selectedSeason = {};
 
-  Widget seasonSheet() {
-    Set<String> tempSeason = Set.from(selectedSeason);
-    return StatefulBuilder(
-      builder: (context, setSheetState) {
-        return SizedBox(
-          height: 400,
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                      child: const Text('Close'),
-                      onPressed: () => Navigator.pop(context, false),
-                    ),
-                    ElevatedButton(
-                      child: const Text('Clear'),
-                      onPressed: () => setSheetState(() => tempSeason.clear()),
-                    ),
-                    ElevatedButton(
-                      child: const Text('Submit'),
-                      onPressed: () {
-                        setState(() => selectedSeason = tempSeason);
-                        Navigator.pop(context, true);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: seasons.map((season) {
-                  final isSelected = tempSeason.contains(season);
-                  return GestureDetector(
-                    onTap: () => setSheetState(() {
-                      if (tempSeason.contains(season)) {
-                        tempSeason.remove(season);
-                      } else {
-                        tempSeason.add(season);
-                      }
-                    }),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF2d3561)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
-                      ),
-                      child: Text(
-                        season,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF1a1a2e),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  // Widget seasonSheet() {
+  //   Set<String> tempSeason = Set.from(selectedSeason);
+  //   return StatefulBuilder(
+  //     builder: (context, setSheetState) {
+  //       return SizedBox(
+  //         height: 400,
+  //         width: double.infinity,
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Padding(
+  //               padding: const EdgeInsets.all(12),
+  //               child: Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   ElevatedButton(
+  //                     child: const Text('Close'),
+  //                     onPressed: () => Navigator.pop(context, false),
+  //                   ),
+  //                   ElevatedButton(
+  //                     child: const Text('Clear'),
+  //                     onPressed: () => setSheetState(() => tempSeason.clear()),
+  //                   ),
+  //                   ElevatedButton(
+  //                     child: const Text('Submit'),
+  //                     onPressed: () {
+  //                       setState(() => selectedSeason = tempSeason);
+  //                       Navigator.pop(context, true);
+  //                     },
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             Column(
+  //               crossAxisAlignment: CrossAxisAlignment.stretch,
+  //               children: seasons.map((season) {
+  //                 final isSelected = tempSeason.contains(season);
+  //                 return GestureDetector(
+  //                   onTap: () => setSheetState(() {
+  //                     if (tempSeason.contains(season)) {
+  //                       tempSeason.remove(season);
+  //                     } else {
+  //                       tempSeason.add(season);
+  //                     }
+  //                   }),
+  //                   child: Container(
+  //                     margin: const EdgeInsets.symmetric(
+  //                       horizontal: 16,
+  //                       vertical: 6,
+  //                     ),
+  //                     padding: const EdgeInsets.symmetric(
+  //                       horizontal: 16,
+  //                       vertical: 14,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       color: isSelected
+  //                           ? const Color(0xFF2d3561)
+  //                           : Colors.white,
+  //                       borderRadius: BorderRadius.circular(20),
+  //                       border: Border.all(color: const Color(0xFFE0E0E0)),
+  //                     ),
+  //                     child: Text(
+  //                       season,
+  //                       textAlign: TextAlign.center,
+  //                       style: TextStyle(
+  //                         fontWeight: FontWeight.w600,
+  //                         color: isSelected
+  //                             ? Colors.white
+  //                             : const Color(0xFF1a1a2e),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 );
+  //               }).toList(),
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   final List<String> occasions = ['Formal', 'Casual', 'Athletic'];
-  String? selectedOccasion;
+  Set<String> selectedOccasion = {};
 
-  Widget occasionSheet() {
-    String? tempOccasion = selectedOccasion;
-    return StatefulBuilder(
-      builder: (context, setSheetState) {
-        return SizedBox(
-          height: 400,
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                      child: const Text('Close'),
-                      onPressed: () => Navigator.pop(context, false),
-                    ),
-                    ElevatedButton(
-                      child: const Text('Clear'),
-                      onPressed: () => setSheetState(() => tempOccasion = null),
-                    ),
-                    ElevatedButton(
-                      child: const Text('Submit'),
-                      onPressed: () {
-                        setState(() => selectedOccasion = tempOccasion);
-                        Navigator.pop(context, true);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: occasions.map((occasion) {
-                  final isSelected = tempOccasion == occasion;
-                  return GestureDetector(
-                    onTap: () => setSheetState(() => tempOccasion = occasion),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF2d3561)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
-                      ),
-                      child: Text(
-                        occasion,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF1a1a2e),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
+  // Widget occasionSheet() {
+  //   String? tempOccasion = selectedOccasion;
+  //   return StatefulBuilder(
+  //     builder: (context, setSheetState) {
+  //       return SizedBox(
+  //         height: 400,
+  //         width: double.infinity,
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Padding(
+  //               padding: const EdgeInsets.all(12),
+  //               child: Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   ElevatedButton(
+  //                     child: const Text('Close'),
+  //                     onPressed: () => Navigator.pop(context, false),
+  //                   ),
+  //                   ElevatedButton(
+  //                     child: const Text('Clear'),
+  //                     onPressed: () => setSheetState(() => tempOccasion = null),
+  //                   ),
+  //                   ElevatedButton(
+  //                     child: const Text('Submit'),
+  //                     onPressed: () {
+  //                       setState(() => selectedOccasion = tempOccasion);
+  //                       Navigator.pop(context, true);
+  //                     },
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             Column(
+  //               crossAxisAlignment: CrossAxisAlignment.stretch,
+  //               children: occasions.map((occasion) {
+  //                 final isSelected = tempOccasion == occasion;
+  //                 return GestureDetector(
+  //                   onTap: () => setSheetState(() => tempOccasion = occasion),
+  //                   child: Container(
+  //                     margin: const EdgeInsets.symmetric(
+  //                       horizontal: 16,
+  //                       vertical: 6,
+  //                     ),
+  //                     padding: const EdgeInsets.symmetric(
+  //                       horizontal: 16,
+  //                       vertical: 14,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       color: isSelected
+  //                           ? const Color(0xFF2d3561)
+  //                           : Colors.white,
+  //                       borderRadius: BorderRadius.circular(20),
+  //                       border: Border.all(color: const Color(0xFFE0E0E0)),
+  //                     ),
+  //                     child: Text(
+  //                       occasion,
+  //                       textAlign: TextAlign.center,
+  //                       style: TextStyle(
+  //                         fontWeight: FontWeight.w600,
+  //                         color: isSelected
+  //                             ? Colors.white
+  //                             : const Color(0xFF1a1a2e),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 );
+  //               }).toList(),
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   final Map<String, Color> allColorsMap = {
     'Beige': const Color(0xFFE8D8B5),
@@ -492,83 +501,85 @@ class _DigitalClosetState extends State<DigitalCloset> {
     'Accessories',
     'Dresses',
   ];
-  String? selectedType;
+  Set<String> selectedType = {};
 
-  Widget typeSheet() {
-    String? tempType = selectedType;
-    return StatefulBuilder(
-      builder: (context, setSheetState) {
-        return SizedBox(
-          height: 400,
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                      child: const Text('Close'),
-                      onPressed: () => Navigator.pop(context, false),
-                    ),
-                    ElevatedButton(
-                      child: const Text('Clear'),
-                      onPressed: () => setSheetState(() => tempType = null),
-                    ),
-                    ElevatedButton(
-                      child: const Text('Submit'),
-                      onPressed: () {
-                        setState(() => selectedType = tempType);
-                        Navigator.pop(context, true);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: types.map((type) {
-                  final isSelected = tempType == type;
-                  return GestureDetector(
-                    onTap: () => setSheetState(() => tempType = type),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF2d3561)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
-                      ),
-                      child: Text(
-                        type,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF1a1a2e),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
+
+  // Widget typeSheet() {
+  //   String? tempType = selectedType;
+  //   return StatefulBuilder(
+  //     builder: (context, setSheetState) {
+  //       return SizedBox(
+  //         height: 400,
+  //         width: double.infinity,
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Padding(
+  //               padding: const EdgeInsets.all(12),
+  //               child: Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   ElevatedButton(
+  //                     child: const Text('Close'),
+  //                     onPressed: () => Navigator.pop(context, false),
+  //                   ),
+  //                   ElevatedButton(
+  //                     child: const Text('Clear'),
+  //                     onPressed: () => setSheetState(() => tempType = null),
+  //                   ),
+  //                   ElevatedButton(
+  //                     child: const Text('Submit'),
+  //                     onPressed: () {
+  //                       setState(() => selectedType = tempType);
+  //                       Navigator.pop(context, true);
+  //                     },
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             Column(
+  //               crossAxisAlignment: CrossAxisAlignment.stretch,
+  //               children: types.map((type) {
+  //                 final isSelected = tempType == type;
+  //                 return GestureDetector(
+  //                   onTap: () => setSheetState(() => tempType = type),
+  //                   child: Container(
+  //                     margin: const EdgeInsets.symmetric(
+  //                       horizontal: 16,
+  //                       vertical: 6,
+  //                     ),
+  //                     padding: const EdgeInsets.symmetric(
+  //                       horizontal: 16,
+  //                       vertical: 8,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       color: isSelected
+  //                           ? const Color(0xFF2d3561)
+  //                           : Colors.white,
+  //                       borderRadius: BorderRadius.circular(20),
+  //                       border: Border.all(color: const Color(0xFFE0E0E0)),
+  //                     ),
+  //                     child: Text(
+  //                       type,
+  //                       textAlign: TextAlign.center,
+  //                       style: TextStyle(
+  //                         fontWeight: FontWeight.w600,
+  //                         color: isSelected
+  //                             ? Colors.white
+  //                             : const Color(0xFF1a1a2e),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 );
+  //               }).toList(),
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget filterSelectionSheet(
     List<String> filterOptions,
@@ -905,10 +916,10 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                 (filter == 'Season' &&
                                     selectedSeason.isNotEmpty) ||
                                 (filter == 'Occasion' &&
-                                    selectedOccasion != null) ||
+                                    selectedOccasion.isNotEmpty) ||
                                 (filter == 'Color' &&
                                     selectedColorNames.isNotEmpty) ||
-                                (filter == 'Type' && selectedType != null);
+                                (filter == 'Type' && selectedType.isNotEmpty);
 
                             return GestureDetector(
                               onTap: () {
