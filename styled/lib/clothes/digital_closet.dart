@@ -16,11 +16,11 @@ class _DigitalClosetState extends State<DigitalCloset> {
   final searchController = TextEditingController();
   String searchQuery = '';
   String? selectedFilter;
-  int closetTab = 0; // 0 = my closet, 1 = saved outfits
+  int closetTab = 0;
   List<Map<String, dynamic>> savedOutfits = [];
   bool isLoadingOutfits = false;
   bool isGridView = true;
-  bool _searchOpen = false; // NEW: controls search bar visibility
+  bool _searchOpen = false;
 
   final List<String> filters = ['Season', 'Occasion', 'Color', 'Type'];
 
@@ -123,13 +123,12 @@ class _DigitalClosetState extends State<DigitalCloset> {
                   children: [
                     if (outfit['accessory_id'] != null)
                       _outfitItemRow(
-                        'Accessory',
-                        outfit['accessory_id'].toString(),
-                      ),
+                          'Accessory', outfit['accessory_id'].toString()),
                     if (outfit['top_id'] != null)
                       _outfitItemRow('Top', outfit['top_id'].toString()),
                     if (outfit['bottom_id'] != null)
-                      _outfitItemRow('Bottom', outfit['bottom_id'].toString()),
+                      _outfitItemRow(
+                          'Bottom', outfit['bottom_id'].toString()),
                     if (outfit['shoes_id'] != null)
                       _outfitItemRow('Shoes', outfit['shoes_id'].toString()),
                   ],
@@ -155,25 +154,18 @@ class _DigitalClosetState extends State<DigitalCloset> {
           height: label == 'Shoes'
               ? 100
               : label == 'Accessory'
-              ? 80
-              : 120,
+                  ? 80
+                  : 120,
           decoration: BoxDecoration(
             color: const Color(0xFFF0F2F5),
             border: Border.all(color: const Color(0xFFE0E0E0), width: 0.5),
           ),
           child: item['image_url'] != null
-              ? Image.network(
-                  item['image_url'],
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                )
+              ? Image.network(item['image_url'],
+                  fit: BoxFit.cover, width: double.infinity)
               : const Center(
-                  child: Icon(
-                    Icons.checkroom,
-                    color: Color(0xFF2d3561),
-                    size: 40,
-                  ),
-                ),
+                  child: Icon(Icons.checkroom,
+                      color: Color(0xFF2d3561), size: 40)),
         ),
         Container(
           width: 160,
@@ -186,10 +178,9 @@ class _DigitalClosetState extends State<DigitalCloset> {
             item['name'] ?? 'Unknown',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 11,
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
+                fontSize: 11,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500),
           ),
         ),
       ],
@@ -232,21 +223,18 @@ class _DigitalClosetState extends State<DigitalCloset> {
 
   List<Map<String, dynamic>> get filteredItems {
     return allItems.where((item) {
-      final matchesSearch =
-          item['name']?.toString().toLowerCase().contains(
-            searchQuery.toLowerCase(),
-          ) ??
+      final matchesSearch = item['name']
+              ?.toString()
+              .toLowerCase()
+              .contains(searchQuery.toLowerCase()) ??
           true;
       final matchesSeason =
           selectedSeason.isEmpty || selectedSeason.contains(item['season']);
-      final matchesOccasion =
-          selectedOccasion.isEmpty || selectedOccasion.contains(item ['occasion']);
-      final matchesColor =
-          selectedColorNames.isEmpty ||
-          selectedColorNames.any(
-            (color) =>
-                (item['color'] as String? ?? '').split(', ').contains(color),
-          );
+      final matchesOccasion = selectedOccasion.isEmpty ||
+          selectedOccasion.contains(item['occasion']);
+      final matchesColor = selectedColorNames.isEmpty ||
+          selectedColorNames.any((color) =>
+              (item['color'] as String? ?? '').split(', ').contains(color));
       final matchesType =
           selectedType.isEmpty || selectedType.contains(item['category']);
       return matchesSearch &&
@@ -263,17 +251,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
       builder: (BuildContext context) {
         switch (filter) {
           case 'Season':
-            return filterSelectionSheet(
-              seasons,
-              selectedSeason,
-              (chosenItems) => setState(() => selectedSeason = chosenItems),
-            );
+            return filterSelectionSheet(seasons, selectedSeason,
+                (chosenItems) => setState(() => selectedSeason = chosenItems));
           case 'Occasion':
             return filterSelectionSheet(
-              occasions,
-              selectedOccasion,
-              (chosenItems) => setState(() => selectedOccasion = chosenItems),
-            );
+                occasions,
+                selectedOccasion,
+                (chosenItems) =>
+                    setState(() => selectedOccasion = chosenItems));
           case 'Color':
             return filterSelectionSheet(
               allColorsMap.keys.toList(),
@@ -291,19 +276,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
               ),
             );
           case 'Type':
-            return filterSelectionSheet(
-              types,
-              selectedType,
-              (chosenItems) => setState(() => selectedType = chosenItems),
-            );
+            return filterSelectionSheet(types, selectedType,
+                (chosenItems) => setState(() => selectedType = chosenItems));
           default:
             return const SizedBox();
         }
       },
     ).then((submitted) {
-      if (submitted == true) {
-        setState(() {});
-      }
+      if (submitted == true) setState(() {});
       setState(() => selectedFilter = null);
     });
   }
@@ -311,167 +291,8 @@ class _DigitalClosetState extends State<DigitalCloset> {
   final List<String> seasons = ['Winter', 'Summer', 'Fall', 'Spring'];
   Set<String> selectedSeason = {};
 
-  // Widget seasonSheet() {
-  //   Set<String> tempSeason = Set.from(selectedSeason);
-  //   return StatefulBuilder(
-  //     builder: (context, setSheetState) {
-  //       return SizedBox(
-  //         height: 400,
-  //         width: double.infinity,
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             Padding(
-  //               padding: const EdgeInsets.all(12),
-  //               child: Row(
-  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                 children: [
-  //                   ElevatedButton(
-  //                     child: const Text('Close'),
-  //                     onPressed: () => Navigator.pop(context, false),
-  //                   ),
-  //                   ElevatedButton(
-  //                     child: const Text('Clear'),
-  //                     onPressed: () => setSheetState(() => tempSeason.clear()),
-  //                   ),
-  //                   ElevatedButton(
-  //                     child: const Text('Submit'),
-  //                     onPressed: () {
-  //                       setState(() => selectedSeason = tempSeason);
-  //                       Navigator.pop(context, true);
-  //                     },
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //             Column(
-  //               crossAxisAlignment: CrossAxisAlignment.stretch,
-  //               children: seasons.map((season) {
-  //                 final isSelected = tempSeason.contains(season);
-  //                 return GestureDetector(
-  //                   onTap: () => setSheetState(() {
-  //                     if (tempSeason.contains(season)) {
-  //                       tempSeason.remove(season);
-  //                     } else {
-  //                       tempSeason.add(season);
-  //                     }
-  //                   }),
-  //                   child: Container(
-  //                     margin: const EdgeInsets.symmetric(
-  //                       horizontal: 16,
-  //                       vertical: 6,
-  //                     ),
-  //                     padding: const EdgeInsets.symmetric(
-  //                       horizontal: 16,
-  //                       vertical: 14,
-  //                     ),
-  //                     decoration: BoxDecoration(
-  //                       color: isSelected
-  //                           ? const Color(0xFF2d3561)
-  //                           : Colors.white,
-  //                       borderRadius: BorderRadius.circular(20),
-  //                       border: Border.all(color: const Color(0xFFE0E0E0)),
-  //                     ),
-  //                     child: Text(
-  //                       season,
-  //                       textAlign: TextAlign.center,
-  //                       style: TextStyle(
-  //                         fontWeight: FontWeight.w600,
-  //                         color: isSelected
-  //                             ? Colors.white
-  //                             : const Color(0xFF1a1a2e),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 );
-  //               }).toList(),
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
   final List<String> occasions = ['Formal', 'Casual', 'Athletic'];
   Set<String> selectedOccasion = {};
-
-
-  // Widget occasionSheet() {
-  //   String? tempOccasion = selectedOccasion;
-  //   return StatefulBuilder(
-  //     builder: (context, setSheetState) {
-  //       return SizedBox(
-  //         height: 400,
-  //         width: double.infinity,
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             Padding(
-  //               padding: const EdgeInsets.all(12),
-  //               child: Row(
-  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                 children: [
-  //                   ElevatedButton(
-  //                     child: const Text('Close'),
-  //                     onPressed: () => Navigator.pop(context, false),
-  //                   ),
-  //                   ElevatedButton(
-  //                     child: const Text('Clear'),
-  //                     onPressed: () => setSheetState(() => tempOccasion = null),
-  //                   ),
-  //                   ElevatedButton(
-  //                     child: const Text('Submit'),
-  //                     onPressed: () {
-  //                       setState(() => selectedOccasion = tempOccasion);
-  //                       Navigator.pop(context, true);
-  //                     },
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //             Column(
-  //               crossAxisAlignment: CrossAxisAlignment.stretch,
-  //               children: occasions.map((occasion) {
-  //                 final isSelected = tempOccasion == occasion;
-  //                 return GestureDetector(
-  //                   onTap: () => setSheetState(() => tempOccasion = occasion),
-  //                   child: Container(
-  //                     margin: const EdgeInsets.symmetric(
-  //                       horizontal: 16,
-  //                       vertical: 6,
-  //                     ),
-  //                     padding: const EdgeInsets.symmetric(
-  //                       horizontal: 16,
-  //                       vertical: 14,
-  //                     ),
-  //                     decoration: BoxDecoration(
-  //                       color: isSelected
-  //                           ? const Color(0xFF2d3561)
-  //                           : Colors.white,
-  //                       borderRadius: BorderRadius.circular(20),
-  //                       border: Border.all(color: const Color(0xFFE0E0E0)),
-  //                     ),
-  //                     child: Text(
-  //                       occasion,
-  //                       textAlign: TextAlign.center,
-  //                       style: TextStyle(
-  //                         fontWeight: FontWeight.w600,
-  //                         color: isSelected
-  //                             ? Colors.white
-  //                             : const Color(0xFF1a1a2e),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 );
-  //               }).toList(),
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
 
   final Map<String, Color> allColorsMap = {
     'Beige': const Color(0xFFE8D8B5),
@@ -502,84 +323,6 @@ class _DigitalClosetState extends State<DigitalCloset> {
     'Dresses',
   ];
   Set<String> selectedType = {};
-
-
-
-  // Widget typeSheet() {
-  //   String? tempType = selectedType;
-  //   return StatefulBuilder(
-  //     builder: (context, setSheetState) {
-  //       return SizedBox(
-  //         height: 400,
-  //         width: double.infinity,
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             Padding(
-  //               padding: const EdgeInsets.all(12),
-  //               child: Row(
-  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                 children: [
-  //                   ElevatedButton(
-  //                     child: const Text('Close'),
-  //                     onPressed: () => Navigator.pop(context, false),
-  //                   ),
-  //                   ElevatedButton(
-  //                     child: const Text('Clear'),
-  //                     onPressed: () => setSheetState(() => tempType = null),
-  //                   ),
-  //                   ElevatedButton(
-  //                     child: const Text('Submit'),
-  //                     onPressed: () {
-  //                       setState(() => selectedType = tempType);
-  //                       Navigator.pop(context, true);
-  //                     },
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //             Column(
-  //               crossAxisAlignment: CrossAxisAlignment.stretch,
-  //               children: types.map((type) {
-  //                 final isSelected = tempType == type;
-  //                 return GestureDetector(
-  //                   onTap: () => setSheetState(() => tempType = type),
-  //                   child: Container(
-  //                     margin: const EdgeInsets.symmetric(
-  //                       horizontal: 16,
-  //                       vertical: 6,
-  //                     ),
-  //                     padding: const EdgeInsets.symmetric(
-  //                       horizontal: 16,
-  //                       vertical: 8,
-  //                     ),
-  //                     decoration: BoxDecoration(
-  //                       color: isSelected
-  //                           ? const Color(0xFF2d3561)
-  //                           : Colors.white,
-  //                       borderRadius: BorderRadius.circular(20),
-  //                       border: Border.all(color: const Color(0xFFE0E0E0)),
-  //                     ),
-  //                     child: Text(
-  //                       type,
-  //                       textAlign: TextAlign.center,
-  //                       style: TextStyle(
-  //                         fontWeight: FontWeight.w600,
-  //                         color: isSelected
-  //                             ? Colors.white
-  //                             : const Color(0xFF1a1a2e),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 );
-  //               }).toList(),
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
 
   Widget filterSelectionSheet(
     List<String> filterOptions,
@@ -624,7 +367,8 @@ class _DigitalClosetState extends State<DigitalCloset> {
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   children: filterOptions.map((filterOption) {
-                    final isSelected = tempChosenOptions.contains(filterOption);
+                    final isSelected =
+                        tempChosenOptions.contains(filterOption);
                     return Column(
                       children: [
                         ListTile(
@@ -647,9 +391,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.black,
-                                      width: 2,
-                                    ),
+                                        color: Colors.black, width: 2),
                                   ),
                                   child: iconCreatorFunction!(filterOption),
                                 ),
@@ -684,10 +426,9 @@ class _DigitalClosetState extends State<DigitalCloset> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Top bar: tab switcher + icon buttons ──────────────────
+              // ── Top bar ───────────────────────────────────────────────
               Row(
                 children: [
-                  // Tab toggle
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
@@ -701,8 +442,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                               onTap: () => setState(() => closetTab = 0),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
+                                    vertical: 10),
                                 decoration: BoxDecoration(
                                   color: closetTab == 0
                                       ? const Color(0xFF2d3561)
@@ -729,8 +469,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                               onTap: () => setState(() => closetTab = 1),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
+                                    vertical: 10),
                                 decoration: BoxDecoration(
                                   color: closetTab == 1
                                       ? const Color(0xFF2d3561)
@@ -756,8 +495,6 @@ class _DigitalClosetState extends State<DigitalCloset> {
                       ),
                     ),
                   ),
-
-                  // Search + grid/list toggle (only on My Closet tab)
                   if (closetTab == 0) ...[
                     const SizedBox(width: 8),
                     GestureDetector(
@@ -790,7 +527,8 @@ class _DigitalClosetState extends State<DigitalCloset> {
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () => setState(() => isGridView = !isGridView),
+                      onTap: () =>
+                          setState(() => isGridView = !isGridView),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -819,14 +557,12 @@ class _DigitalClosetState extends State<DigitalCloset> {
                   decoration: InputDecoration(
                     hintText: 'Search items...',
                     hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    prefixIcon:
+                        const Icon(Icons.search, color: Colors.grey),
                     suffixIcon: searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.grey,
-                              size: 18,
-                            ),
+                            icon: const Icon(Icons.close,
+                                color: Colors.grey, size: 18),
                             onPressed: () => setState(() {
                               searchController.clear();
                               searchQuery = '';
@@ -835,7 +571,8 @@ class _DigitalClosetState extends State<DigitalCloset> {
                         : null,
                     filled: true,
                     fillColor: const Color(0xFFF0F2F5),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
@@ -849,12 +586,9 @@ class _DigitalClosetState extends State<DigitalCloset> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    // Item count pill
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF0F2F5),
                         borderRadius: BorderRadius.circular(20),
@@ -869,32 +603,29 @@ class _DigitalClosetState extends State<DigitalCloset> {
                       ),
                     ),
                     const SizedBox(width: 8),
-
-                    // Filter chips
                     Expanded(
                       child: SizedBox(
                         height: 32,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          itemCount:
-                              filters.length + (hasActiveFilters ? 1 : 0),
-                          separatorBuilder: (_, __) => const SizedBox(width: 6),
+                          itemCount: filters.length +
+                              (hasActiveFilters ? 1 : 0),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 6),
                           itemBuilder: (context, index) {
-                            // "Clear" chip at the end when filters are active
-                            if (hasActiveFilters && index == filters.length) {
+                            if (hasActiveFilters &&
+                                index == filters.length) {
                               return GestureDetector(
                                 onTap: clearAllFilters,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
+                                      horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius:
+                                        BorderRadius.circular(20),
                                     border: Border.all(
-                                      color: Colors.red.shade200,
-                                    ),
+                                        color: Colors.red.shade200),
                                   ),
                                   child: Text(
                                     'Clear',
@@ -910,8 +641,6 @@ class _DigitalClosetState extends State<DigitalCloset> {
 
                             final filter = filters[index];
                             final isSelected = selectedFilter == filter;
-
-                            // Check if this filter category has active selections
                             final bool hasValue =
                                 (filter == 'Season' &&
                                     selectedSeason.isNotEmpty) ||
@@ -919,22 +648,18 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                     selectedOccasion.isNotEmpty) ||
                                 (filter == 'Color' &&
                                     selectedColorNames.isNotEmpty) ||
-                                (filter == 'Type' && selectedType.isNotEmpty);
+                                (filter == 'Type' &&
+                                    selectedType.isNotEmpty);
 
                             return GestureDetector(
                               onTap: () {
-                                setState(
-                                  () => selectedFilter = isSelected
-                                      ? null
-                                      : filter,
-                                );
+                                setState(() => selectedFilter =
+                                    isSelected ? null : filter);
                                 if (!isSelected) openBottomSheet(filter);
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
+                                    horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: hasValue || isSelected
                                       ? const Color(0xFF2d3561)
@@ -990,102 +715,104 @@ class _DigitalClosetState extends State<DigitalCloset> {
                   child: isLoadingOutfits
                       ? const Center(child: CircularProgressIndicator())
                       : savedOutfits.isEmpty
-                      ? const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.bookmark_border,
-                                size: 64,
-                                color: Colors.grey,
+                          ? const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.bookmark_border,
+                                      size: 64, color: Colors.grey),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No saved outfits yet!',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1a1a2e)),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                      'Build and save outfits in the Planner tab',
+                                      style: TextStyle(color: Colors.grey)),
+                                ],
                               ),
-                              SizedBox(height: 16),
-                              Text(
-                                'No saved outfits yet!',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1a1a2e),
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Build and save outfits in the Planner tab',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: savedOutfits.length,
-                          itemBuilder: (context, index) {
-                            final outfit = savedOutfits[index];
-                            return Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => _showOutfitDetails(outfit),
-                                borderRadius: BorderRadius.circular(14),
-                                child: Container(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: const Color(0xFFE0E0E0),
+                            )
+                          : ListView.builder(
+                              itemCount: savedOutfits.length,
+                              itemBuilder: (context, index) {
+                                final outfit = savedOutfits[index];
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () =>
+                                        _showOutfitDetails(outfit),
+                                    borderRadius:
+                                        BorderRadius.circular(14),
+                                    child: Container(
+                                      margin: const EdgeInsets.only(
+                                          bottom: 12),
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius:
+                                            BorderRadius.circular(14),
+                                        border: Border.all(
+                                            color: const Color(
+                                                0xFFE0E0E0)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                  0xFFEEF0FF),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      10),
+                                            ),
+                                            child: const Icon(
+                                                Icons.checkroom,
+                                                color:
+                                                    Color(0xFF2d3561)),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment
+                                                      .start,
+                                              children: [
+                                                Text(
+                                                  outfit['name'] ??
+                                                      'Unnamed Outfit',
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 15,
+                                                      color: Color(
+                                                          0xFF1a1a2e)),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  outfit['created_at'] !=
+                                                          null
+                                                      ? 'Saved on ${outfit['created_at'].toString().substring(0, 10)}'
+                                                      : 'Saved outfit',
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFEEF0FF),
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.checkroom,
-                                          color: Color(0xFF2d3561),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              outfit['name'] ??
-                                                  'Unnamed Outfit',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 15,
-                                                color: Color(0xFF1a1a2e),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              outfit['created_at'] != null
-                                                  ? 'Saved on ${outfit['created_at'].toString().substring(0, 10)}'
-                                                  : 'Saved outfit',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                                );
+                              },
+                            ),
                 ),
               ],
 
@@ -1095,57 +822,53 @@ class _DigitalClosetState extends State<DigitalCloset> {
                   child: isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : filteredItems.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.checkroom,
-                                size: 64,
-                                color: Colors.grey,
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.checkroom,
+                                      size: 64, color: Colors.grey),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'Your closet is empty!',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1a1a2e),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                      'Tap + to add your first item',
+                                      style:
+                                          TextStyle(color: Colors.grey)),
+                                ],
                               ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Your closet is empty!',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1a1a2e),
+                            )
+                          : isGridView
+                              ? GridView.builder(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: 0.75,
+                                  ),
+                                  itemCount: filteredItems.length,
+                                  itemBuilder: (context, index) =>
+                                      _clothesCard(filteredItems[index]),
+                                )
+                              : ListView.builder(
+                                  itemCount: filteredItems.length,
+                                  itemBuilder: (context, index) =>
+                                      _clothesListTitle(
+                                          filteredItems[index]),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Tap + to add your first item',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        )
-                      : isGridView
-                      ? GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 0.75,
-                              ),
-                          itemCount: filteredItems.length,
-                          itemBuilder: (context, index) =>
-                              _clothesCard(filteredItems[index]),
-                        )
-                      : ListView.builder(
-                          itemCount: filteredItems.length,
-                          itemBuilder: (context, index) =>
-                              _clothesListTitle(filteredItems[index]),
-                        ),
                 ),
             ],
           ),
         ),
       ),
-
-      // Add button
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(
@@ -1178,23 +901,16 @@ class _DigitalClosetState extends State<DigitalCloset> {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: item['image_url'] != null
-                  ? Image.network(
-                      item['image_url'],
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    )
+                  ? Image.network(item['image_url'],
+                      width: double.infinity, fit: BoxFit.cover)
                   : Container(
                       color: const Color(0xFFF0F2F5),
                       child: const Center(
-                        child: Icon(
-                          Icons.checkroom,
-                          size: 48,
-                          color: Colors.grey,
-                        ),
+                        child: Icon(Icons.checkroom,
+                            size: 48, color: Colors.grey),
                       ),
                     ),
             ),
@@ -1204,8 +920,10 @@ class _DigitalClosetState extends State<DigitalCloset> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Name + stacked delete/edit icons ──────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
@@ -1217,53 +935,58 @@ class _DigitalClosetState extends State<DigitalCloset> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        size: 18,
-                        color: Colors.red,
-                      ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete Item'),
-                            content: const Text(
-                              'Are you sure you want to delete this item?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Cancel'),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Item'),
+                                content: const Text(
+                                    'Are you sure you want to delete this item?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      deleteItem(item['itemId']);
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
                               ),
-                              TextButton(
-                                onPressed: () {
-                                  deleteItem(item['itemId']);
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Delete'),
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.delete,
+                                size: 18, color: Colors.red),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => UploadPage(
+                                    existingClothingItem: item),
                               ),
-                            ],
+                            );
+                            fetchItems();
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.edit,
+                                size: 18, color: Colors.grey),
                           ),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.edit,
-                        size: 18,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                UploadPage(existingClothingItem: item),
-                          ),
-                        );
-                        fetchItems();
-                      },
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1300,24 +1023,18 @@ class _DigitalClosetState extends State<DigitalCloset> {
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(16)),
             child: item['image_url'] != null
-                ? Image.network(
-                    item['image_url'],
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  )
+                ? Image.network(item['image_url'],
+                    width: 100, height: 100, fit: BoxFit.cover)
                 : Container(
                     width: 100,
                     height: 100,
                     color: const Color(0xFFF0F2F5),
                     child: const Center(
-                      child: Icon(
-                        Icons.checkroom,
-                        size: 48,
-                        color: Colors.grey,
-                      ),
+                      child: Icon(Icons.checkroom,
+                          size: 48, color: Colors.grey),
                     ),
                   ),
           ),
@@ -1347,28 +1064,30 @@ class _DigitalClosetState extends State<DigitalCloset> {
           ),
           Column(
             children: [
-              IconButton(
-                icon: const Icon(Icons.edit, size: 18, color: Colors.grey),
-                onPressed: () async {
+              GestureDetector(
+                onTap: () async {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => UploadPage(existingClothingItem: item),
+                      builder: (_) =>
+                          UploadPage(existingClothingItem: item),
                     ),
                   );
                   fetchItems();
                 },
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.edit, size: 18, color: Colors.grey),
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete, size: 18, color: Colors.red),
-                onPressed: () {
+              GestureDetector(
+                onTap: () {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Delete Item'),
                       content: const Text(
-                        'Are you sure you want to delete this item?',
-                      ),
+                          'Are you sure you want to delete this item?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -1385,6 +1104,11 @@ class _DigitalClosetState extends State<DigitalCloset> {
                     ),
                   );
                 },
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child:
+                      Icon(Icons.delete, size: 18, color: Colors.red),
+                ),
               ),
             ],
           ),

@@ -30,7 +30,7 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
 
   int mode = 0; // 0 = pick items, 1 = by occasion, 2 = build outfit
 
- @override
+  @override
   void initState() {
     super.initState();
     fetchCloset();
@@ -41,14 +41,38 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
     return closetItems.where((item) {
       final cat = (item['category'] ?? '').toString().toLowerCase();
       return cat.contains(lower) ||
-          (lower == 'top' && (cat.contains('shirt') || cat.contains('top') || cat.contains('blouse') || cat.contains('jacket') || cat.contains('hoodie'))) ||
-          (lower == 'bottom' && (cat.contains('pant') || cat.contains('jean') || cat.contains('skirt') || cat.contains('shorts') || cat.contains('bottom'))) ||
-          (lower == 'shoes' && (cat.contains('shoe') || cat.contains('sneaker') || cat.contains('boot') || cat.contains('loafer') || cat.contains('heel'))) ||
-          (lower == 'accessory' && (cat.contains('access') || cat.contains('hat') || cat.contains('bag') || cat.contains('belt') || cat.contains('jewelry')));
+          (lower == 'top' &&
+              (cat.contains('shirt') ||
+                  cat.contains('top') ||
+                  cat.contains('blouse') ||
+                  cat.contains('jacket') ||
+                  cat.contains('hoodie'))) ||
+          (lower == 'bottom' &&
+              (cat.contains('pant') ||
+                  cat.contains('jean') ||
+                  cat.contains('skirt') ||
+                  cat.contains('shorts') ||
+                  cat.contains('bottom'))) ||
+          (lower == 'shoes' &&
+              (cat.contains('shoe') ||
+                  cat.contains('sneaker') ||
+                  cat.contains('boot') ||
+                  cat.contains('loafer') ||
+                  cat.contains('heel'))) ||
+          (lower == 'accessory' &&
+              (cat.contains('access') ||
+                  cat.contains('hat') ||
+                  cat.contains('bag') ||
+                  cat.contains('belt') ||
+                  cat.contains('jewelry')));
     }).toList();
   }
 
-  void _showItemPicker(String slotLabel, String category, Function(Map<String, dynamic>) onPick) {
+  void _showItemPicker(
+    String slotLabel,
+    String category,
+    Function(Map<String, dynamic>) onPick,
+  ) {
     final items = _itemsByCategory(category);
     showModalBottomSheet(
       context: context,
@@ -105,15 +129,18 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
                                       color: const Color(0xFFF0F2F5),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Icon(Icons.checkroom, color: Colors.grey),
+                                    child: const Icon(Icons.checkroom,
+                                        color: Colors.grey),
                                   ),
                             title: Text(
                               item['name'] ?? 'Unnamed',
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
                             ),
                             subtitle: Text(
                               item['category'] ?? '',
-                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12),
                             ),
                             onTap: () {
                               onPick(item);
@@ -153,15 +180,16 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
     try {
       final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
 
-      final closetDescription = closetItems.map((item) =>
-        'itemId:${item['itemId']}, Name:${item['name']}, Category:${item['category']}, Color:${item['color']}, Season:${item['season']}, Occasion:${item['occasion']}'
-      ).join('\n');
+      final closetDescription = closetItems
+          .map((item) =>
+              'itemId:${item['itemId']}, Name:${item['name']}, Category:${item['category']}, Color:${item['color']}, Season:${item['season']}, Occasion:${item['occasion']}')
+          .join('\n');
 
       String prompt;
       if (mode == 0 && selectedItems.isNotEmpty) {
-        final selected = selectedItems.map((item) =>
-          '${item['name']} (${item['category']})'
-        ).join(', ');
+        final selected = selectedItems
+            .map((item) => '${item['name']} (${item['category']})')
+            .join(', ');
         prompt = '''
 You are a fashion stylist. The user has selected: $selected.
 From the following closet items, suggest a complete outfit that works well with the selected items.
@@ -206,12 +234,10 @@ $closetDescription
         }),
       );
 
-      debugPrint('Status: ${response.statusCode}');
-      debugPrint('Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final responseJson = jsonDecode(response.body);
-        final text = responseJson['candidates'][0]['content']['parts'][0]['text'] as String;
+        final text = responseJson['candidates'][0]['content']['parts'][0]
+            ['text'] as String;
 
         final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(text);
         if (jsonMatch != null) {
@@ -246,86 +272,85 @@ $closetDescription
 
     setState(() => isGenerating = false);
   }
+
   Future<void> saveAIOutfit() async {
-  if (outfitNameController.text.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please give your outfit a name!')),
-    );
-    return;
-  }
+    if (outfitNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please give your outfit a name!')),
+      );
+      return;
+    }
 
-  if (generatedOutfit.isEmpty) return;
+    if (generatedOutfit.isEmpty) return;
 
-  try {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
 
-    Map<String, dynamic>? aiTop;
-    Map<String, dynamic>? aiBottom;
-    Map<String, dynamic>? aiShoes;
-    Map<String, dynamic>? aiAccessory;
+      Map<String, dynamic>? aiTop;
+      Map<String, dynamic>? aiBottom;
+      Map<String, dynamic>? aiShoes;
+      Map<String, dynamic>? aiAccessory;
 
-    for (final item in generatedOutfit) {
-      final cat = (item['category'] ?? '').toString().toLowerCase();
+      for (final item in generatedOutfit) {
+        final cat = (item['category'] ?? '').toString().toLowerCase();
+        if (cat.contains('top') ||
+            cat.contains('shirt') ||
+            cat.contains('blouse') ||
+            cat.contains('jacket') ||
+            cat.contains('hoodie')) {
+          aiTop = item;
+        } else if (cat.contains('bottom') ||
+            cat.contains('pant') ||
+            cat.contains('jean') ||
+            cat.contains('skirt') ||
+            cat.contains('shorts')) {
+          aiBottom = item;
+        } else if (cat.contains('shoe') ||
+            cat.contains('sneaker') ||
+            cat.contains('boot') ||
+            cat.contains('heel') ||
+            cat.contains('loafer')) {
+          aiShoes = item;
+        } else if (cat.contains('access') ||
+            cat.contains('hat') ||
+            cat.contains('bag') ||
+            cat.contains('belt') ||
+            cat.contains('jewelry')) {
+          aiAccessory = item;
+        }
+      }
 
-      if (cat.contains('top') ||
-          cat.contains('shirt') ||
-          cat.contains('blouse') ||
-          cat.contains('jacket') ||
-          cat.contains('hoodie')) {
-        aiTop = item;
-      } else if (cat.contains('bottom') ||
-          cat.contains('pant') ||
-          cat.contains('jean') ||
-          cat.contains('skirt') ||
-          cat.contains('shorts')) {
-        aiBottom = item;
-      } else if (cat.contains('shoe') ||
-          cat.contains('sneaker') ||
-          cat.contains('boot') ||
-          cat.contains('heel') ||
-          cat.contains('loafer')) {
-        aiShoes = item;
-      } else if (cat.contains('access') ||
-          cat.contains('hat') ||
-          cat.contains('bag') ||
-          cat.contains('belt') ||
-          cat.contains('jewelry')) {
-        aiAccessory = item;
+      await Supabase.instance.client.from('outfits').insert({
+        'profile_id': userId,
+        'name': outfitNameController.text.trim(),
+        'top_id': aiTop?['itemId']?.toString(),
+        'bottom_id': aiBottom?['itemId']?.toString(),
+        'shoes_id': aiShoes?['itemId']?.toString(),
+        'accessory_id': aiAccessory?['itemId']?.toString(),
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('AI Outfit saved! 🎉'),
+            backgroundColor: Color(0xFF2d3561),
+          ),
+        );
+        setState(() {
+          generatedOutfit = [];
+          outfitExplanation = null;
+          outfitNameController.clear();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving AI outfit: $e')),
+        );
       }
     }
-
-    await Supabase.instance.client.from('outfits').insert({
-      'profile_id': userId,
-      'name': outfitNameController.text.trim(),
-      'top_id': aiTop?['itemId']?.toString(),
-      'bottom_id': aiBottom?['itemId']?.toString(),
-      'shoes_id': aiShoes?['itemId']?.toString(),
-      'accessory_id': aiAccessory?['itemId']?.toString(),
-      'created_at': DateTime.now().toIso8601String(),
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('AI Outfit saved! 🎉'),
-          backgroundColor: Color(0xFF2d3561),
-        ),
-      );
-
-      setState(() {
-        generatedOutfit = [];
-        outfitExplanation = null;
-        outfitNameController.clear();
-      });
-    }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving AI outfit: $e')),
-      );
-    }
   }
-}
 
   Future<void> saveOutfit() async {
     if (outfitNameController.text.trim().isEmpty) {
@@ -334,7 +359,10 @@ $closetDescription
       );
       return;
     }
-    if (selectedTop == null && selectedBottom == null && selectedShoes == null && selectedAccessory == null) {
+    if (selectedTop == null &&
+        selectedBottom == null &&
+        selectedShoes == null &&
+        selectedAccessory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select at least one item!')),
       );
@@ -372,110 +400,220 @@ $closetDescription
       );
     }
   }
+
   Future<void> fetchCloset() async {
-  setState(() => isLoading = true);
-  try {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
+    setState(() => isLoading = true);
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+      final data = await Supabase.instance.client
+          .from('clothes')
+          .select()
+          .eq('profile_id', userId);
+      setState(() {
+        closetItems = List<Map<String, dynamic>>.from(data);
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error: $e');
       setState(() => isLoading = false);
-      return;
     }
-    final data = await Supabase.instance.client
-        .from('clothes')
-        .select()
-        .eq('profile_id', userId);
-    setState(() {
-      closetItems = List<Map<String, dynamic>>.from(data);
-      isLoading = false;
-    });
-  } catch (e) {
-    debugPrint('Error: $e');
-    setState(() => isLoading = false);
   }
-}
 
-Widget _buildSlot({
-  required String label,
-  required String emoji,
-  required Map<String, dynamic>? selected,
-  required VoidCallback onClear,
-}) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: selected != null ? const Color(0xFFEEF0FF) : const Color(0xFFF8F8FA),
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(
-        color: selected != null ? const Color(0xFF2d3561) : const Color(0xFFE0E0E0),
-        width: selected != null ? 2 : 1,
+  Widget _buildSlot({
+    required String label,
+    required String emoji,
+    required Map<String, dynamic>? selected,
+    required VoidCallback onClear,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: selected != null
+            ? const Color(0xFFEEF0FF)
+            : const Color(0xFFF8F8FA),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: selected != null
+              ? const Color(0xFF2d3561)
+              : const Color(0xFFE0E0E0),
+          width: selected != null ? 2 : 1,
+        ),
       ),
-    ),
-    child: Row(
-      children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEEEEEE),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: selected != null && selected['image_url'] != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    selected['image_url'],
-                    fit: BoxFit.cover,
+      child: Row(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEEEEE),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: selected != null && selected['image_url'] != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      selected['image_url'],
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Center(
+                    child: Text(emoji,
+                        style: const TextStyle(fontSize: 26)),
                   ),
-                )
-              : Center(
-                  child: Text(emoji, style: const TextStyle(fontSize: 26)),
-                ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 2),
-              Text(
-                selected != null ? selected['name'] ?? 'Unnamed' : 'Tap to pick',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: selected != null ? const Color(0xFF1a1a2e) : Colors.grey,
-                ),
-              ),
-            ],
           ),
-        ),
-        selected != null
-            ? GestureDetector(
-                onTap: onClear,
-                child: const Icon(Icons.close, color: Colors.grey, size: 20),
-              )
-            : const Icon(Icons.add_circle_outline, color: Color(0xFF2d3561), size: 22),
-      ],
-    ),
-  );
-} 
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500)),
+                const SizedBox(height: 2),
+                Text(
+                  selected != null
+                      ? selected['name'] ?? 'Unnamed'
+                      : 'Tap to pick',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: selected != null
+                        ? const Color(0xFF1a1a2e)
+                        : Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          selected != null
+              ? GestureDetector(
+                  onTap: onClear,
+                  child:
+                      const Icon(Icons.close, color: Colors.grey, size: 20),
+                )
+              : const Icon(Icons.add_circle_outline,
+                  color: Color(0xFF2d3561), size: 22),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildModeDescription() {
+    final descriptions = [
+      {
+        'icon': Icons.touch_app_outlined,
+        'title': 'Pick Items',
+        'subtitle':
+            'Select one or more pieces you want to wear, the AI will build a full outfit around them.',
+      },
+      {
+        'icon': Icons.event_outlined,
+        'title': 'By Occasion',
+        'subtitle':
+            'Tell us where you\'re going and the AI will pick the best outfit from your closet for you.',
+      },
+      {
+        'icon': Icons.style_outlined,
+        'title': 'Build Outfit',
+        'subtitle':
+            'Manually pick each piece yourself; top, bottom, shoes, and accessory; then save it.',
+      },
+    ];
+
+    final d = descriptions[mode];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEF0FF),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(d['icon'] as IconData,
+              color: const Color(0xFF2d3561), size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              d['subtitle'] as String,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF2d3561),
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyClosetWarning() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.checkroom_outlined, size: 48, color: Colors.grey),
+          const SizedBox(height: 12),
+          const Text(
+            'Your closet is empty!',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1a1a2e),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Add clothes to your closet first before planning an outfit.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '👉 Go to the Closet tab and tap + to add your first item.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF2d3561),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final hasItems = closetItems.isNotEmpty;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title:  Text(
+        title: Text(
           'Outfit Planner',
           style: GoogleFonts.rockSalt(
             fontStyle: FontStyle.italic,
-            color: Color(0xFF1a1a2e),
+            color: const Color(0xFF1a1a2e),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -488,7 +626,6 @@ Widget _buildSlot({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              // Mode selector
               Container(
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0F2F5),
@@ -496,425 +633,482 @@ Widget _buildSlot({
                 ),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => mode = 0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: mode == 0 ? const Color(0xFF2d3561) : Colors.transparent,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Text(
-                            'Pick Items',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.rockSalt(
-                              fontStyle: FontStyle.italic,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                              color: mode == 0 ? Colors.white : Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => mode = 1),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: mode == 1 ? const Color(0xFF2d3561) : Colors.transparent,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Text(
-                            'By Occasion',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.rockSalt(
-                              fontStyle: FontStyle.italic,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                              color: mode == 1 ? Colors.white : Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ),
-                      ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => mode = 2),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: mode == 2 ? const Color(0xFF2d3561) : Colors.transparent,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Text(
-                            'Build Outfit',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.rockSalt(
-                              fontStyle: FontStyle.italic,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                              color: mode == 2 ? Colors.white : Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    _modeTab('Pick Items', 0),
+                    _modeTab('By Occasion', 1),
+                    _modeTab('Build Outfit', 2),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-                   
 
-              // Mode 0: Pick items
-              if (mode == 0) ...[
-                const Text(
-                  'Select items to build around:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: Color(0xFF1a1a2e),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 0.75,
-                        ),
-                        itemCount: closetItems.length,
-                        itemBuilder: (context, index) {
-                          final item = closetItems[index];
-                          final isSelected = selectedItems.contains(item);
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (isSelected) {
-                                  selectedItems.remove(item);
-                                } else {
-                                  selectedItems.add(item);
-                                }
-                              });
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? const Color(0xFF2d3561)
-                                      : Colors.transparent,
-                                  width: 3,
-                                ),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    item['image_url'] != null
-                                        ? Image.network(
-                                            item['image_url'],
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Container(
-                                            color: const Color(0xFFF0F2F5),
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                const Icon(Icons.checkroom, color: Colors.grey),
-                                                Text(
-                                                  item['name'] ?? '',
-                                                  textAlign: TextAlign.center,
-                                                  style: const TextStyle(fontSize: 10),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                    if (isSelected)
-                                      Positioned(
-                                        top: 4,
-                                        right: 4,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(2),
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFF2d3561),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.check,
-                                            color: Colors.white,
-                                            size: 14,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ],
+              const SizedBox(height: 12),
 
-              // Mode 1: By occasion
-              if (mode == 1) ...[
-                const Text(
-                  'What\'s the occasion?',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: Color(0xFF1a1a2e),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: occasionController,
-                  decoration: InputDecoration(
-                    hintText: 'e.g. Casual dinner, Job interview...',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    filled: true,
-                    fillColor: const Color(0xFFF0F2F5),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ],
+              _buildModeDescription(),
 
-             if (mode == 0 || mode == 1) const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Generate button (only for mode 0 and 1)
-              if (mode == 0 || mode == 1)
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: isGenerating ? null : generateOutfit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2d3561),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+              if (isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (!hasItems)
+                _buildEmptyClosetWarning()
+              else ...[
+
+                if (mode == 0) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.auto_awesome, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Generate Outfit',
+                      const Text(
+                        'Select items to build around:',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xFF1a1a2e),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              // Generated outfit result
-              // Generated outfit result
-if (generatedOutfit.isNotEmpty) ...[
-  const SizedBox(height: 32),
-  const Text(
-    'Your AI Outfit ✨',
-    style: TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.bold,
-      color: Color(0xFF1a1a2e),
-    ),
-  ),
-  const SizedBox(height: 8),
-  if (outfitExplanation != null)
-    Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F2F5),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Text(
-        outfitExplanation!,
-        style: const TextStyle(color: Color(0xFF1a1a2e), fontSize: 14),
-      ),
-    ),
-  const SizedBox(height: 16),
-  GridView.builder(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 0.75,
-    ),
-    itemCount: generatedOutfit.length,
-    itemBuilder: (context, index) {
-      final item = generatedOutfit[index];
-      return Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: item['image_url'] != null
-                    ? Image.network(item['image_url'], width: double.infinity, fit: BoxFit.cover)
-                    : Container(
-                        color: const Color(0xFFF0F2F5),
-                        child: const Center(child: Icon(Icons.checkroom, size: 48, color: Colors.grey)),
-                      ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Text(
-                item['name'] ?? '',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1a1a2e)),
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  ),
-  const SizedBox(height: 30),
-  TextField(
-    controller: outfitNameController,
-    decoration: InputDecoration(
-      hintText: 'Give this outfit a name...',
-      hintStyle: const TextStyle(color: Colors.grey),
-      prefixIcon: const Icon(Icons.drive_file_rename_outline, color: Color(0xFF2d3561)),
-      filled: true,
-      fillColor: const Color(0xFFF0F2F5),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
-      ),
-    ),
-  ),
-  const SizedBox(height: 12),
-  SizedBox(
-    width: double.infinity,
-    height: 54,
-    child: ElevatedButton(
-      onPressed: saveAIOutfit,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF2d3561),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.bookmark_add, color: Colors.white),
-          SizedBox(width: 8),
-          Text('Save Outfit', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-        ],
-      ),
-    ),
-  ),
-],
-               
-              if (mode == 2) const SizedBox(height: 0),
-
-              // Mode 2: Build Outfit placeholder
-              if (mode == 2) ...[
-                const Text(
-                  'Build your outfit:',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1a1a2e)),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Tap each slot to pick from your closet',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                const SizedBox(height: 16),
-
-                // Top slot
-          GestureDetector(
-                  onTap: () => _showItemPicker('Top', 'top', (item) => setState(() => selectedTop = item)),
-                  child: _buildSlot(label: 'TOP', emoji: '👕', selected: selectedTop, onClear: () => setState(() => selectedTop = null)),
-                ),
-                GestureDetector(
-                  onTap: () => _showItemPicker('Bottom', 'bottom', (item) => setState(() => selectedBottom = item)),
-                  child: _buildSlot(label: 'BOTTOM', emoji: '👖', selected: selectedBottom, onClear: () => setState(() => selectedBottom = null)),
-                ),
-                GestureDetector(
-                  onTap: () => _showItemPicker('Shoes', 'shoes', (item) => setState(() => selectedShoes = item)),
-                  child: _buildSlot(label: 'SHOES', emoji: '👟', selected: selectedShoes, onClear: () => setState(() => selectedShoes = null)),
-                ),
-                GestureDetector(
-                  onTap: () => _showItemPicker('Accessory', 'accessory', (item) => setState(() => selectedAccessory = item)),
-                  child: _buildSlot(label: 'ACCESSORY', emoji: '🧢', selected: selectedAccessory, onClear: () => setState(() => selectedAccessory = null)),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: outfitNameController,
-                  decoration: InputDecoration(
-                    hintText: 'Give your outfit a name...',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.drive_file_rename_outline, color: Color(0xFF2d3561)),
-                    filled: true,
-                    fillColor: const Color(0xFFF0F2F5),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: saveOutfit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2d3561),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.bookmark_add, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(
-                          'Save Outfit',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                      if (selectedItems.isNotEmpty)
+                        GestureDetector(
+                          onTap: () => setState(() => selectedItems.clear()),
+                          child: const Text(
+                            'Clear',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF2d3561),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  if (selectedItems.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        '${selectedItems.length} item${selectedItems.length > 1 ? 's' : ''} selected, tap Generate to build your outfit',
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.grey),
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.75,
+                    ),
+                    itemCount: closetItems.length,
+                    itemBuilder: (context, index) {
+                      final item = closetItems[index];
+                      final isSelected = selectedItems.contains(item);
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              selectedItems.remove(item);
+                            } else {
+                              selectedItems.add(item);
+                            }
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF2d3561)
+                                  : Colors.transparent,
+                              width: 3,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                item['image_url'] != null
+                                    ? Image.network(
+                                        item['image_url'],
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Container(
+                                        color: const Color(0xFFF0F2F5),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(Icons.checkroom,
+                                                color: Colors.grey),
+                                            Text(
+                                              item['name'] ?? '',
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                  fontSize: 10),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                if (isSelected)
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF2d3561),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 14,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+
+                if (mode == 1) ...[
+                  const Text(
+                    'What\'s the occasion?',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: Color(0xFF1a1a2e),
                     ),
                   ),
-                ),
-                const SizedBox(height: 30),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: occasionController,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Casual dinner, Job interview...',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: const Color(0xFFF0F2F5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ],
+
+                if (mode == 0 || mode == 1) ...[
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: isGenerating ? null : generateOutfit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2d3561),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: isGenerating
+                          ? const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Generating...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.auto_awesome, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Generate Outfit',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
+
+                if (generatedOutfit.isNotEmpty) ...[
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Your AI Outfit ✨',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1a1a2e),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (outfitExplanation != null)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F2F5),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        outfitExplanation!,
+                        style: const TextStyle(
+                            color: Color(0xFF1a1a2e), fontSize: 14),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.75,
+                    ),
+                    itemCount: generatedOutfit.length,
+                    itemBuilder: (context, index) {
+                      final item = generatedOutfit[index];
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(16)),
+                                child: item['image_url'] != null
+                                    ? Image.network(item['image_url'],
+                                        width: double.infinity,
+                                        fit: BoxFit.cover)
+                                    : Container(
+                                        color: const Color(0xFFF0F2F5),
+                                        child: const Center(
+                                            child: Icon(Icons.checkroom,
+                                                size: 48,
+                                                color: Colors.grey)),
+                                      ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Text(
+                                item['name'] ?? '',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Color(0xFF1a1a2e)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: outfitNameController,
+                    decoration: InputDecoration(
+                      hintText: 'Give this outfit a name...',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      prefixIcon: const Icon(
+                          Icons.drive_file_rename_outline,
+                          color: Color(0xFF2d3561)),
+                      filled: true,
+                      fillColor: const Color(0xFFF0F2F5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: saveAIOutfit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2d3561),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.bookmark_add, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('Save Outfit',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
+                if (mode == 2) ...[
+                  GestureDetector(
+                    onTap: () => _showItemPicker('Top', 'top',
+                        (item) => setState(() => selectedTop = item)),
+                    child: _buildSlot(
+                        label: 'TOP',
+                        emoji: '👕',
+                        selected: selectedTop,
+                        onClear: () => setState(() => selectedTop = null)),
+                  ),
+                  GestureDetector(
+                    onTap: () => _showItemPicker('Bottom', 'bottom',
+                        (item) => setState(() => selectedBottom = item)),
+                    child: _buildSlot(
+                        label: 'BOTTOM',
+                        emoji: '👖',
+                        selected: selectedBottom,
+                        onClear: () =>
+                            setState(() => selectedBottom = null)),
+                  ),
+                  GestureDetector(
+                    onTap: () => _showItemPicker('Shoes', 'shoes',
+                        (item) => setState(() => selectedShoes = item)),
+                    child: _buildSlot(
+                        label: 'SHOES',
+                        emoji: '👟',
+                        selected: selectedShoes,
+                        onClear: () =>
+                            setState(() => selectedShoes = null)),
+                  ),
+                  GestureDetector(
+                    onTap: () => _showItemPicker(
+                        'Accessory',
+                        'accessory',
+                        (item) =>
+                            setState(() => selectedAccessory = item)),
+                    child: _buildSlot(
+                        label: 'ACCESSORY',
+                        emoji: '🧢',
+                        selected: selectedAccessory,
+                        onClear: () =>
+                            setState(() => selectedAccessory = null)),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: outfitNameController,
+                    decoration: InputDecoration(
+                      hintText: 'Give your outfit a name...',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      prefixIcon: const Icon(
+                          Icons.drive_file_rename_outline,
+                          color: Color(0xFF2d3561)),
+                      filled: true,
+                      fillColor: const Color(0xFFF0F2F5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: saveOutfit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2d3561),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.bookmark_add, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Save Outfit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                ],
               ],
-           
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _modeTab(String label, int index) {
+    final isActive = mode == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() {
+          mode = index;
+          generatedOutfit = [];
+          outfitExplanation = null;
+          selectedItems.clear();
+        }),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFF2d3561) : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.rockSalt(
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              color: isActive ? Colors.white : Colors.grey,
+            ),
           ),
         ),
       ),
