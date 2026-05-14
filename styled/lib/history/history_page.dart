@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:styled/history/items_added_line_chart.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -16,8 +15,6 @@ class _HistoryPageState extends State<HistoryPage> {
   int _totalItems = 0;
   int _wornItems = 0;
   List<Map<String, dynamic>> _mostWornItems = [];
-  List<FlSpot> _addedPerMonth = [];
-  List<String> _addedDateLabels = [];
   Map<String, int> _categoryBreakdown = {};
   final List<String> _filters = ['All', 'Casual', 'Formal', 'Athletic'];
 
@@ -103,20 +100,6 @@ class _HistoryPageState extends State<HistoryPage> {
           breakdown[category] = (breakdown[category] ?? 0) + 1;
         }
 
-        final Map<String, int> addedByMonth = {};
-        for (Map<String, dynamic> item in items) {
-          final month = item['created_at']?.toString();
-          if (month != null) {
-            final monthKey = month.substring(0, 7);
-            addedByMonth[monthKey] = (addedByMonth[monthKey] ?? 0) + 1;
-          }
-        }
-
-        final sortedMonths = addedByMonth.keys.toList()..sort();
-        final spots = sortedMonths.asMap().entries.map((e) {
-          return FlSpot(e.key.toDouble(), addedByMonth[e.value]!.toDouble());
-        }).toList();
-
         // fetch planned outfits from a planned_outfits table if it exists
         // for now we keep planned outfits in memory
         setState(() {
@@ -124,8 +107,6 @@ class _HistoryPageState extends State<HistoryPage> {
           _wornItems = wornWithCount.length;
           _mostWornItems = wornWithCount;
           _categoryBreakdown = breakdown;
-          _addedPerMonth = spots;
-          _addedDateLabels = sortedMonths;
           _outfitsByDate = outfitsByDate;
           _savedOutfits = List<Map<String, dynamic>>.from(outfitResponse);
         });
@@ -818,30 +799,6 @@ class _HistoryPageState extends State<HistoryPage> {
 
             const SizedBox(height: 20),
 
-            // ── Items Added Over Time ─────────────────────────────────
-            const Text(
-              'Items Added Over Time',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1a1a2e),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: ItemsAddedLineChart(
-                dataSpot: _addedPerMonth,
-                dateLabels: _addedDateLabels,
-              ),
-            ),
-
             // ── Insight Card ──────────────────────────────────────────
             if (_totalItems > 0 && _notWornPercent > 0) ...[
               const SizedBox(height: 20),
@@ -963,6 +920,3 @@ class _BarChart extends StatelessWidget {
     );
   }
 }
-
-// ── Line Chart ────────────────────────────────────────────────────────────────
-

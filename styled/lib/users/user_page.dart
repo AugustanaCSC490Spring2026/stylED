@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/login_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:styled/history/category_pie_chart.dart';
+import 'package:styled/history/items_added_line_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,7 +19,11 @@ class _ProfilePageState extends State<ProfilePage> {
   int _totalItems = 0;
   int _daysActive = 0;
   int _totalOutfits = 0;
+
   Map<String, int> _categoryData = {};
+
+  List<FlSpot> _addedPerMonth = [];
+  List<String> _addedDateLabels = [];
 
   @override
   void initState() {
@@ -77,6 +83,33 @@ class _ProfilePageState extends State<ProfilePage> {
         categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
       }
 
+      // items added by month
+      final Map<String, int> addedByMonth = {};
+
+      for (final item in clothesResponse) {
+        final createdAt = item['created_at']?.toString();
+
+        if (createdAt != null) {
+          final monthKey = createdAt.substring(0, 7);
+
+          if (addedByMonth[monthKey] == null) {
+            addedByMonth[monthKey] = 0;
+          }
+          addedByMonth[monthKey] = addedByMonth[monthKey]! + 1;
+        }
+      }
+
+      // sort months chronologically
+      final sortedMonths = addedByMonth.keys.toList()..sort();
+
+      // convert into chart points
+      final spots = sortedMonths.asMap().entries.map((e) {
+        return FlSpot(
+          e.key.toDouble(),
+          addedByMonth[e.value]!.toDouble(),
+        );
+      }).toList();
+
       setState(() {
         _totalItems = (clothesResponse as List).length;
         _totalOutfits = (outfitResponse as List).length;
@@ -84,6 +117,8 @@ class _ProfilePageState extends State<ProfilePage> {
         _email = email;
         _displayName = displayName;
         _daysActive = days;
+        _addedPerMonth = spots;
+        _addedDateLabels = sortedMonths;
       });
     } catch (e) {
       setState(() {
@@ -243,7 +278,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             const SizedBox(height: 12),
 
-            Container(
+            SizedBox(
               width: double.infinity,
               child: _categoryData.isEmpty
                   ? const Center(
@@ -258,6 +293,33 @@ class _ProfilePageState extends State<ProfilePage> {
                   : CategoryPieChart(categoryData: _categoryData),
             ),
             const SizedBox(height: 16),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Items Added Over Time',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1a1a2e),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: ItemsAddedLineChart(
+                dataSpot: _addedPerMonth,
+                dateLabels: _addedDateLabels,
+              ),
+            ),
 
             // Privacy & Security Section
             const Text(
