@@ -37,10 +37,11 @@ class _ProfilePageState extends State<ProfilePage> {
       final email = user.email ?? '';
       //final namePart = email.split('@').first;
       final namePart = userName;
-      final parts = namePart.split('.');
+      /*final parts = namePart.split('.');
       String displayName = parts.isNotEmpty
           ? parts.map((p) => p[0].toUpperCase() + p.substring(1)).join(' ')
-          : namePart;
+          : namePart; */
+      final displayName = namePart;
 
       final createdAt = user.createdAt;
       final days = DateTime.now().difference(DateTime.parse(createdAt)).inDays;
@@ -75,10 +76,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   String _getInitials() {
     if (_displayName.isEmpty) return '?';
-    final parts = _displayName.split(' ');
-    if (parts.length >= 2) {
+    final parts = _displayName.split('(');
+    /*if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
+    } */
     return _displayName[0].toUpperCase();
   }
 
