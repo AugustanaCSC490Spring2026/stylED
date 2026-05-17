@@ -69,13 +69,44 @@ class _ShowcaseClosetState extends State<ShowcaseCloset> {
       ? const Center(child: CircularProgressIndicator())
       :CarouselView(
         controller: controller,
-        itemExtent: 200.0,
+        itemExtent: MediaQuery.of(context).size.width * 0.85, //item cards occupy 85% of screen
+        shrinkExtent: MediaQuery.of(context).size.width * 0.5, //item cards shrink around to half of their original width as they slide away
+        itemSnapping: true,
         children: allItems.map((item) =>
-        Container(
-          color: const Color(0xFFEEF0FF),
-          child: item['image_url'] != null
-          ? Image.network(item['image_url'], fit: BoxFit.cover)
-          :Center(child: Text(item['name'] ?? 'Item')),
+        ClipRRect( //wrap images to create a rounded rectangle shape
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            fit: StackFit.expand,//layer 1: image, stretcher to fit the entire item card from edge to edge
+            children: [
+
+            item['image_url'] != null
+          ? Image.network(item['image_url'], fit: BoxFit.cover, //image is able to properly fill out an entire item card
+          width: double.infinity, height: double.infinity)
+          : Container(
+            color: const Color(0xFFEEF0FF),
+          
+            child :Center(child: Text(item['name'] ?? 'Item')),
+
+          ),
+        Positioned( //tags are pinned at the bottom left of an image as they were meant to occupy the whole card
+        //this is basically layer 2, which is why it's sitting on top of layer 1: the image
+          bottom: 12,
+          left: 12,
+          child: Row(
+            children: [
+              if(item['occasion'] != null) _tag(item['occasion']),
+              const SizedBox(width: 6),
+              if (item['season'] != null) _tag(item['season']),
+            ],
+          ),
+        ),
+
+            ],
+          )
+            
+
+
+          
         ),
         ).toList(),
       
@@ -84,4 +115,21 @@ class _ShowcaseClosetState extends State<ShowcaseCloset> {
       );
     
   }
+
+  Widget _tag(String label){
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FF2F5),
+        borderRadius: BorderRadius.circular(20)
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 11, color: Color(0xFF1a1a2e)),
+      ),
+    );
+  }
+
+
+
 }
