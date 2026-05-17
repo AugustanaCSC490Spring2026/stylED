@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../auth/login_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:styled/history/category_pie_chart.dart';
 import 'package:styled/history/items_added_line_chart.dart';
@@ -38,12 +39,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final profileResponse = await Supabase.instance.client
-        .from('profiles')
-        .select('name, age')
-        .eq('id', user.id)
-        .single();
-      final age = profileResponse['age'] ?? 0;
+          .from('profiles')
+          .select('name, age')
+          .eq('id', user.id)
+          .single();
+          final age = profileResponse['age'] ?? 0;
+
       final userName = profileResponse['name'] + " (" + age.toString() + " Years Old)";
+      
 
       if (userName != null && userName.toString().isNotEmpty) {
         final parts = userName.toString().split('.');
@@ -58,7 +61,7 @@ class _ProfilePageState extends State<ProfilePage> {
             .map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '')
             .join(' ')
             .trim();
-      } 
+      }
     } catch (e) {
       displayName = email.split('@').first;
     }
@@ -131,10 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   String _getInitials() {
     if (_displayName.isEmpty) return '?';
-    final parts = _displayName.split('(');
-    /*if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    } */
+    final parts = _displayName.split(' ');
     return _displayName[0].toUpperCase();
   }
 
