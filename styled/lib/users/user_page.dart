@@ -132,9 +132,6 @@ class _ProfilePageState extends State<ProfilePage> {
   String _getInitials() {
     if (_displayName.isEmpty) return '?';
     final parts = _displayName.split('(');
-    /*if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    } */
     return _displayName[0].toUpperCase();
   }
 
