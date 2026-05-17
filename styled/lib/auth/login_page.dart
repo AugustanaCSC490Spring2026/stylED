@@ -8,10 +8,6 @@ class LoginPage extends StatefulWidget {
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
-
-/*class UserHolder {
-  static String? id;
-}*/
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -37,13 +33,6 @@ class _LoginPageState extends State<LoginPage> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      /*
-       final user = res.user;
-       if (user != null){
-        UserHolder.id = user.id;
-      } 
-      */
-      //if (mounted) Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -161,28 +150,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                 ),
               ),
-              const SizedBox(height: 28),
-
-              // Divider
-              Row(
-                children: const [
-                  Expanded(child: Divider(color: Colors.grey)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('or continue with', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                  ),
-                  Expanded(child: Divider(color: Colors.grey)),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Google button (placeholder)
-              _socialButton(Icons.g_mobiledata, 'Continue with Google', () {}),
-              const SizedBox(height: 12),
-              _socialButton(Icons.business, 'Continue with Microsoft', () {}),
-              const SizedBox(height: 12),
-              _socialButton(Icons.camera_alt_outlined, 'Continue with Instagram', () {}),
-
               const SizedBox(height: 28),
 
               // Sign Up link
