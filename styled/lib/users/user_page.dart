@@ -333,19 +333,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 12),
 
-            _ProfileMenuItem(
-              icon: Icons.lock_outline,
-              title: 'Privacy Settings',
-              subtitle: 'Manage your data',
-              onTap: () {},
-            ),
-            const SizedBox(height: 8),
-            _ProfileMenuItem(
-              icon: Icons.download_outlined,
-              title: 'Export Data',
-              subtitle: 'Download your closet',
-              onTap: () {},
-            ),
+  
 
             const SizedBox(height: 20),
 

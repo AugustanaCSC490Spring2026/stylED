@@ -4,6 +4,7 @@ import 'package:styled/auth/login_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'upload_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'showcase_closet.dart';
 
 class DigitalCloset extends StatefulWidget {
   const DigitalCloset({super.key});
@@ -774,8 +775,10 @@ class _DigitalClosetState extends State<DigitalCloset> {
                         height: 54,
                         child: ElevatedButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Item Showcase coming soon!')),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ShowcaseCloset()),
+                            
                             );
                           },
                           style: ElevatedButton.styleFrom(
