@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../auth/login_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:styled/history/category_pie_chart.dart';
 import 'package:styled/history/items_added_line_chart.dart';
@@ -46,15 +45,6 @@ class _ProfilePageState extends State<ProfilePage> {
       final age = profileResponse['age'] ?? 0;
       final userName = profileResponse['name'] + " (" + age.toString() + " Years Old)";
 
-      final email = user.email ?? '';
-      //final namePart = email.split('@').first;
-      final namePart = userName;
-      /*final parts = namePart.split('.');
-      String displayName = parts.isNotEmpty
-          ? parts.map((p) => p[0].toUpperCase() + p.substring(1)).join(' ')
-          : namePart; */
-      String displayName = namePart;
-
       if (userName != null && userName.toString().isNotEmpty) {
         final parts = userName.toString().split('.');
         displayName = parts
@@ -68,7 +58,7 @@ class _ProfilePageState extends State<ProfilePage> {
             .map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '')
             .join(' ')
             .trim();
-      }
+      } 
     } catch (e) {
       displayName = email.split('@').first;
     }
