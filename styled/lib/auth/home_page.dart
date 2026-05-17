@@ -498,7 +498,7 @@ class _HomeContentState extends State<_HomeContent> {
 
             const SizedBox(height: 20),
 
-            // ── Open Outfit Planner Button (fixed!) ───────────────────
+            // Open Outfit Planner Button 
             SizedBox(
               width: double.infinity,
               height: 54,
@@ -524,7 +524,7 @@ class _HomeContentState extends State<_HomeContent> {
 
             const SizedBox(height: 16),
 
-            // ── Private closet note ───────────────────────────────────
+            // Private closet note 
             const Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,

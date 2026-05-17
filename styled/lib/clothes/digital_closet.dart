@@ -122,13 +122,11 @@ class _DigitalClosetState extends State<DigitalCloset> {
                 child: Column(
                   children: [
                     if (outfit['accessory_id'] != null)
-                      _outfitItemRow(
-                          'Accessory', outfit['accessory_id'].toString()),
+                      _outfitItemRow('Accessory', outfit['accessory_id'].toString()),
                     if (outfit['top_id'] != null)
                       _outfitItemRow('Top', outfit['top_id'].toString()),
                     if (outfit['bottom_id'] != null)
-                      _outfitItemRow(
-                          'Bottom', outfit['bottom_id'].toString()),
+                      _outfitItemRow('Bottom', outfit['bottom_id'].toString()),
                     if (outfit['shoes_id'] != null)
                       _outfitItemRow('Shoes', outfit['shoes_id'].toString()),
                   ],
@@ -151,21 +149,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
       children: [
         Container(
           width: 160,
-          height: label == 'Shoes'
-              ? 100
-              : label == 'Accessory'
-                  ? 80
-                  : 120,
+          height: label == 'Shoes' ? 100 : label == 'Accessory' ? 80 : 120,
           decoration: BoxDecoration(
             color: const Color(0xFFF0F2F5),
             border: Border.all(color: const Color(0xFFE0E0E0), width: 0.5),
           ),
           child: item['image_url'] != null
-              ? Image.network(item['image_url'],
-                  fit: BoxFit.cover, width: double.infinity)
-              : const Center(
-                  child: Icon(Icons.checkroom,
-                      color: Color(0xFF2d3561), size: 40)),
+              ? Image.network(item['image_url'], fit: BoxFit.cover, width: double.infinity)
+              : const Center(child: Icon(Icons.checkroom, color: Color(0xFF2d3561), size: 40)),
         ),
         Container(
           width: 160,
@@ -177,10 +168,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
           child: Text(
             item['name'] ?? 'Unknown',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 11,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500),
+            style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
           ),
         ),
       ],
@@ -211,10 +199,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
 
   Future<void> deleteItem(int itemId) async {
     try {
-      await Supabase.instance.client
-          .from('clothes')
-          .delete()
-          .eq('itemId', itemId);
+      await Supabase.instance.client.from('clothes').delete().eq('itemId', itemId);
       fetchItems();
     } catch (e) {
       print(e);
@@ -228,20 +213,13 @@ class _DigitalClosetState extends State<DigitalCloset> {
               .toLowerCase()
               .contains(searchQuery.toLowerCase()) ??
           true;
-      final matchesSeason =
-          selectedSeason.isEmpty || selectedSeason.contains(item['season']);
-      final matchesOccasion = selectedOccasion.isEmpty ||
-          selectedOccasion.contains(item['occasion']);
+      final matchesSeason = selectedSeason.isEmpty || selectedSeason.contains(item['season']);
+      final matchesOccasion = selectedOccasion.isEmpty || selectedOccasion.contains(item['occasion']);
       final matchesColor = selectedColorNames.isEmpty ||
-          selectedColorNames.any((color) =>
-              (item['color'] as String? ?? '').split(', ').contains(color));
-      final matchesType =
-          selectedType.isEmpty || selectedType.contains(item['category']);
-      return matchesSearch &&
-          matchesSeason &&
-          matchesOccasion &&
-          matchesColor &&
-          matchesType;
+          selectedColorNames.any(
+              (color) => (item['color'] as String? ?? '').split(', ').contains(color));
+      final matchesType = selectedType.isEmpty || selectedType.contains(item['category']);
+      return matchesSearch && matchesSeason && matchesOccasion && matchesColor && matchesType;
     }).toList();
   }
 
@@ -254,25 +232,18 @@ class _DigitalClosetState extends State<DigitalCloset> {
             return filterSelectionSheet(seasons, selectedSeason,
                 (chosenItems) => setState(() => selectedSeason = chosenItems));
           case 'Occasion':
-            return filterSelectionSheet(
-                occasions,
-                selectedOccasion,
-                (chosenItems) =>
-                    setState(() => selectedOccasion = chosenItems));
+            return filterSelectionSheet(occasions, selectedOccasion,
+                (chosenItems) => setState(() => selectedOccasion = chosenItems));
           case 'Color':
             return filterSelectionSheet(
               allColorsMap.keys.toList(),
               Set.from(selectedColorNames),
-              (chosenItems) =>
-                  setState(() => selectedColorNames = List.from(chosenItems)),
+              (chosenItems) => setState(() => selectedColorNames = List.from(chosenItems)),
               iconCreatorFunction: (name) => CircleAvatar(
                 radius: 14,
-                backgroundColor: name == 'Multicolored'
-                    ? Colors.transparent
-                    : allColorsMap[name]!,
-                backgroundImage: name == 'Multicolored'
-                    ? const AssetImage('assets/icons/multi.png')
-                    : null,
+                backgroundColor: name == 'Multicolored' ? Colors.transparent : allColorsMap[name]!,
+                backgroundImage:
+                    name == 'Multicolored' ? const AssetImage('assets/icons/multi.png') : null,
               ),
             );
           case 'Type':
@@ -314,14 +285,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
   };
   List<String> selectedColorNames = [];
 
-  final List<String> types = [
-    'Tops',
-    'Bottoms',
-    'Outerwear',
-    'Shoes',
-    'Accessories',
-    'Dresses',
-  ];
+  final List<String> types = ['Tops', 'Bottoms', 'Outerwear', 'Shoes', 'Accessories', 'Dresses'];
   Set<String> selectedType = {};
 
   Widget filterSelectionSheet(
@@ -350,8 +314,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                     ),
                     ElevatedButton(
                       child: const Text('Clear'),
-                      onPressed: () =>
-                          setSheetState(() => tempChosenOptions.clear()),
+                      onPressed: () => setSheetState(() => tempChosenOptions.clear()),
                     ),
                     ElevatedButton(
                       child: const Text('Submit'),
@@ -367,8 +330,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   children: filterOptions.map((filterOption) {
-                    final isSelected =
-                        tempChosenOptions.contains(filterOption);
+                    final isSelected = tempChosenOptions.contains(filterOption);
                     return Column(
                       children: [
                         ListTile(
@@ -390,8 +352,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                               : Container(
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    border: Border.all(
-                                        color: Colors.black, width: 2),
+                                    border: Border.all(color: Colors.black, width: 2),
                                   ),
                                   child: iconCreatorFunction!(filterOption),
                                 ),
@@ -420,13 +381,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Top bar ───────────────────────────────────────────────
+              // Top bar 
               Row(
                 children: [
                   Expanded(
@@ -441,12 +403,9 @@ class _DigitalClosetState extends State<DigitalCloset> {
                             child: GestureDetector(
                               onTap: () => setState(() => closetTab = 0),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: closetTab == 0
-                                      ? const Color(0xFF2d3561)
-                                      : Colors.transparent,
+                                  color: closetTab == 0 ? const Color(0xFF2d3561) : Colors.transparent,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Text(
@@ -456,9 +415,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                     fontStyle: FontStyle.italic,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 12,
-                                    color: closetTab == 0
-                                        ? Colors.white
-                                        : Colors.grey,
+                                    color: closetTab == 0 ? Colors.white : Colors.grey,
                                   ),
                                 ),
                               ),
@@ -468,12 +425,9 @@ class _DigitalClosetState extends State<DigitalCloset> {
                             child: GestureDetector(
                               onTap: () => setState(() => closetTab = 1),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: closetTab == 1
-                                      ? const Color(0xFF2d3561)
-                                      : Colors.transparent,
+                                  color: closetTab == 1 ? const Color(0xFF2d3561) : Colors.transparent,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Text(
@@ -483,9 +437,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                     fontStyle: FontStyle.italic,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 12,
-                                    color: closetTab == 1
-                                        ? Colors.white
-                                        : Colors.grey,
+                                    color: closetTab == 1 ? Colors.white : Colors.grey,
                                   ),
                                 ),
                               ),
@@ -495,59 +447,52 @@ class _DigitalClosetState extends State<DigitalCloset> {
                       ),
                     ),
                   ),
-                  if (closetTab == 0) ...[
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _searchOpen = !_searchOpen;
-                          if (!_searchOpen) {
-                            searchController.clear();
-                            searchQuery = '';
-                          }
-                        });
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: _searchOpen
-                              ? const Color(0xFF2d3561)
-                              : const Color(0xFFF0F2F5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          _searchOpen ? Icons.search_off : Icons.search,
-                          color: _searchOpen
-                              ? Colors.white
-                              : const Color(0xFF1a1a2e),
-                          size: 20,
-                        ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _searchOpen = !_searchOpen;
+                        if (!_searchOpen) {
+                          searchController.clear();
+                          searchQuery = '';
+                        }
+                      });
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _searchOpen ? const Color(0xFF2d3561) : const Color(0xFFF0F2F5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _searchOpen ? Icons.search_off : Icons.search,
+                        color: _searchOpen ? Colors.white : const Color(0xFF1a1a2e),
+                        size: 20,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () =>
-                          setState(() => isGridView = !isGridView),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF0F2F5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          isGridView ? Icons.view_list : Icons.grid_view,
-                          color: const Color(0xFF1a1a2e),
-                          size: 20,
-                        ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => setState(() => isGridView = !isGridView),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F2F5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        isGridView ? Icons.view_list : Icons.grid_view,
+                        color: const Color(0xFF1a1a2e),
+                        size: 20,
                       ),
                     ),
-                  ],
+                  ),
                 ],
               ),
 
-              // ── Collapsible search bar ────────────────────────────────
+              // Collapsible search bar 
               if (closetTab == 0 && _searchOpen) ...[
                 const SizedBox(height: 10),
                 TextField(
@@ -557,12 +502,10 @@ class _DigitalClosetState extends State<DigitalCloset> {
                   decoration: InputDecoration(
                     hintText: 'Search items...',
                     hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon:
-                        const Icon(Icons.search, color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     suffixIcon: searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.close,
-                                color: Colors.grey, size: 18),
+                            icon: const Icon(Icons.close, color: Colors.grey, size: 18),
                             onPressed: () => setState(() {
                               searchController.clear();
                               searchQuery = '';
@@ -571,8 +514,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                         : null,
                     filled: true,
                     fillColor: const Color(0xFFF0F2F5),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
@@ -581,14 +523,13 @@ class _DigitalClosetState extends State<DigitalCloset> {
                 ),
               ],
 
-              // ── Filter chips + item count ─────────────────────────────
+              // Filter chips + item count 
               if (closetTab == 0) ...[
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF0F2F5),
                         borderRadius: BorderRadius.circular(20),
@@ -608,24 +549,18 @@ class _DigitalClosetState extends State<DigitalCloset> {
                         height: 32,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          itemCount: filters.length +
-                              (hasActiveFilters ? 1 : 0),
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 6),
+                          itemCount: filters.length + (hasActiveFilters ? 1 : 0),
+                          separatorBuilder: (_, __) => const SizedBox(width: 6),
                           itemBuilder: (context, index) {
-                            if (hasActiveFilters &&
-                                index == filters.length) {
+                            if (hasActiveFilters && index == filters.length) {
                               return GestureDetector(
                                 onTap: clearAllFilters,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
-                                    borderRadius:
-                                        BorderRadius.circular(20),
-                                    border: Border.all(
-                                        color: Colors.red.shade200),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.red.shade200),
                                   ),
                                   child: Text(
                                     'Clear',
@@ -642,28 +577,20 @@ class _DigitalClosetState extends State<DigitalCloset> {
                             final filter = filters[index];
                             final isSelected = selectedFilter == filter;
                             final bool hasValue =
-                                (filter == 'Season' &&
-                                    selectedSeason.isNotEmpty) ||
-                                (filter == 'Occasion' &&
-                                    selectedOccasion.isNotEmpty) ||
-                                (filter == 'Color' &&
-                                    selectedColorNames.isNotEmpty) ||
-                                (filter == 'Type' &&
-                                    selectedType.isNotEmpty);
+                                (filter == 'Season' && selectedSeason.isNotEmpty) ||
+                                (filter == 'Occasion' && selectedOccasion.isNotEmpty) ||
+                                (filter == 'Color' && selectedColorNames.isNotEmpty) ||
+                                (filter == 'Type' && selectedType.isNotEmpty);
 
                             return GestureDetector(
                               onTap: () {
-                                setState(() => selectedFilter =
-                                    isSelected ? null : filter);
+                                setState(() => selectedFilter = isSelected ? null : filter);
                                 if (!isSelected) openBottomSheet(filter);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: hasValue || isSelected
-                                      ? const Color(0xFF2d3561)
-                                      : Colors.white,
+                                  color: hasValue || isSelected ? const Color(0xFF2d3561) : Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: hasValue || isSelected
@@ -709,8 +636,8 @@ class _DigitalClosetState extends State<DigitalCloset> {
 
               const SizedBox(height: 8),
 
-              // ── Saved Outfits tab ─────────────────────────────────────
-              if (closetTab == 1) ...[
+              //Saved Outfits tab 
+              if (closetTab == 1)
                 Expanded(
                   child: isLoadingOutfits
                       ? const Center(child: CircularProgressIndicator())
@@ -719,8 +646,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.bookmark_border,
-                                      size: 64, color: Colors.grey),
+                                  Icon(Icons.bookmark_border, size: 64, color: Colors.grey),
                                   SizedBox(height: 16),
                                   Text(
                                     'No saved outfits yet!',
@@ -730,8 +656,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                         color: Color(0xFF1a1a2e)),
                                   ),
                                   SizedBox(height: 8),
-                                  Text(
-                                      'Build and save outfits in the Planner tab',
+                                  Text('Build and save outfits in the Planner tab',
                                       style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
@@ -743,21 +668,15 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                 return Material(
                                   color: Colors.transparent,
                                   child: InkWell(
-                                    onTap: () =>
-                                        _showOutfitDetails(outfit),
-                                    borderRadius:
-                                        BorderRadius.circular(14),
+                                    onTap: () => _showOutfitDetails(outfit),
+                                    borderRadius: BorderRadius.circular(14),
                                     child: Container(
-                                      margin: const EdgeInsets.only(
-                                          bottom: 12),
+                                      margin: const EdgeInsets.only(bottom: 12),
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
-                                        borderRadius:
-                                            BorderRadius.circular(14),
-                                        border: Border.all(
-                                            color: const Color(
-                                                0xFFE0E0E0)),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(color: const Color(0xFFE0E0E0)),
                                       ),
                                       child: Row(
                                         children: [
@@ -765,43 +684,29 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                             width: 48,
                                             height: 48,
                                             decoration: BoxDecoration(
-                                              color: const Color(
-                                                  0xFFEEF0FF),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      10),
+                                              color: const Color(0xFFEEF0FF),
+                                              borderRadius: BorderRadius.circular(10),
                                             ),
-                                            child: const Icon(
-                                                Icons.checkroom,
-                                                color:
-                                                    Color(0xFF2d3561)),
+                                            child: const Icon(Icons.checkroom, color: Color(0xFF2d3561)),
                                           ),
                                           const SizedBox(width: 14),
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment
-                                                      .start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  outfit['name'] ??
-                                                      'Unnamed Outfit',
+                                                  outfit['name'] ?? 'Unnamed Outfit',
                                                   style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
+                                                      fontWeight: FontWeight.w600,
                                                       fontSize: 15,
-                                                      color: Color(
-                                                          0xFF1a1a2e)),
+                                                      color: Color(0xFF1a1a2e)),
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  outfit['created_at'] !=
-                                                          null
+                                                  outfit['created_at'] != null
                                                       ? 'Saved on ${outfit['created_at'].toString().substring(0, 10)}'
                                                       : 'Saved outfit',
-                                                  style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.grey),
+                                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                                                 ),
                                               ],
                                             ),
@@ -814,9 +719,8 @@ class _DigitalClosetState extends State<DigitalCloset> {
                               },
                             ),
                 ),
-              ],
 
-              // ── My Closet grid / list ─────────────────────────────────
+              // My Closet grid/list 
               if (closetTab == 0)
                 Expanded(
                   child: isLoading
@@ -826,8 +730,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.checkroom,
-                                      size: 64, color: Colors.grey),
+                                  const Icon(Icons.checkroom, size: 64, color: Colors.grey),
                                   const SizedBox(height: 16),
                                   const Text(
                                     'Your closet is empty!',
@@ -838,47 +741,88 @@ class _DigitalClosetState extends State<DigitalCloset> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  const Text(
-                                      'Tap + to add your first item',
-                                      style:
-                                          TextStyle(color: Colors.grey)),
+                                  const Text('Tap + to add your first item',
+                                      style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
                             )
                           : isGridView
                               ? GridView.builder(
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
                                     crossAxisSpacing: 12,
                                     mainAxisSpacing: 12,
                                     childAspectRatio: 0.75,
                                   ),
                                   itemCount: filteredItems.length,
-                                  itemBuilder: (context, index) =>
-                                      _clothesCard(filteredItems[index]),
+                                  itemBuilder: (context, index) => _clothesCard(filteredItems[index]),
                                 )
                               : ListView.builder(
                                   itemCount: filteredItems.length,
                                   itemBuilder: (context, index) =>
-                                      _clothesListTitle(
-                                          filteredItems[index]),
+                                      _clothesListTitle(filteredItems[index]),
                                 ),
                 ),
+
+              // Item Showcase button + add item
+              if (closetTab == 0) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Item Showcase coming soon!')),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2d3561),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text(
+                            'Item Showcase',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 54,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const UploadPage()),
+                          );
+                          fetchItems();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2d3561),
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Icon(Icons.add, color: Colors.white, size: 28),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const UploadPage()),
-          );
-          fetchItems();
-        },
-        backgroundColor: const Color(0xFF2d3561),
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -890,7 +834,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -901,17 +845,12 @@ class _DigitalClosetState extends State<DigitalCloset> {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: item['image_url'] != null
-                  ? Image.network(item['image_url'],
-                      width: double.infinity, fit: BoxFit.cover)
+                  ? Image.network(item['image_url'], width: double.infinity, fit: BoxFit.cover)
                   : Container(
                       color: const Color(0xFFF0F2F5),
-                      child: const Center(
-                        child: Icon(Icons.checkroom,
-                            size: 48, color: Colors.grey),
-                      ),
+                      child: const Center(child: Icon(Icons.checkroom, size: 48, color: Colors.grey)),
                     ),
             ),
           ),
@@ -920,7 +859,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Name + stacked delete/edit icons ──────────────
+                // Name + stacked delete/edit icons 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -944,12 +883,10 @@ class _DigitalClosetState extends State<DigitalCloset> {
                               context: context,
                               builder: (context) => AlertDialog(
                                 title: const Text('Delete Item'),
-                                content: const Text(
-                                    'Are you sure you want to delete this item?'),
+                                content: const Text('Are you sure you want to delete this item?'),
                                 actions: [
                                   TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context),
+                                    onPressed: () => Navigator.pop(context),
                                     child: const Text('Cancel'),
                                   ),
                                   TextButton(
@@ -965,8 +902,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                           },
                           child: const Padding(
                             padding: EdgeInsets.all(4),
-                            child: Icon(Icons.delete,
-                                size: 18, color: Colors.red),
+                            child: Icon(Icons.delete, size: 18, color: Colors.red),
                           ),
                         ),
                         GestureDetector(
@@ -974,16 +910,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
                             await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => UploadPage(
-                                    existingClothingItem: item),
+                                builder: (_) => UploadPage(existingClothingItem: item),
                               ),
                             );
                             fetchItems();
                           },
                           child: const Padding(
                             padding: EdgeInsets.all(4),
-                            child: Icon(Icons.edit,
-                                size: 18, color: Colors.grey),
+                            child: Icon(Icons.edit, size: 18, color: Colors.grey),
                           ),
                         ),
                       ],
@@ -1014,7 +948,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1023,19 +957,14 @@ class _DigitalClosetState extends State<DigitalCloset> {
       child: Row(
         children: [
           ClipRRect(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: item['image_url'] != null
-                ? Image.network(item['image_url'],
-                    width: 100, height: 100, fit: BoxFit.cover)
+                ? Image.network(item['image_url'], width: 100, height: 100, fit: BoxFit.cover)
                 : Container(
                     width: 100,
                     height: 100,
                     color: const Color(0xFFF0F2F5),
-                    child: const Center(
-                      child: Icon(Icons.checkroom,
-                          size: 48, color: Colors.grey),
-                    ),
+                    child: const Center(child: Icon(Icons.checkroom, size: 48, color: Colors.grey)),
                   ),
           ),
           const SizedBox(width: 12),
@@ -1069,8 +998,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          UploadPage(existingClothingItem: item),
+                      builder: (_) => UploadPage(existingClothingItem: item),
                     ),
                   );
                   fetchItems();
@@ -1086,8 +1014,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Delete Item'),
-                      content: const Text(
-                          'Are you sure you want to delete this item?'),
+                      content: const Text('Are you sure you want to delete this item?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -1106,8 +1033,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(8),
-                  child:
-                      Icon(Icons.delete, size: 18, color: Colors.red),
+                  child: Icon(Icons.delete, size: 18, color: Colors.red),
                 ),
               ),
             ],
