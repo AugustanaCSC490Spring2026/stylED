@@ -44,16 +44,16 @@ class _UploadPageState extends State<UploadPage> {
   final List<String> occasions = ['Formal', 'Casual', 'Athletic'];
 
   final List<Map<String, dynamic>> allColors = [
-    {'name': 'Beige', 'color': const Color(0xFFF5F5DC)},
+    {'name': 'Beige', 'color': const Color(0xFFE8D8B5)}, 
     {'name': 'Black', 'color': Colors.black},
     {'name': 'Blue', 'color': Colors.blue},
     {'name': 'Brown', 'color': Colors.brown},
-    {'name': 'Clear', 'color': Colors.white},
+    {'name': 'Clear', 'color': const Color.fromARGB(255, 235, 240, 255),},
     {'name': 'Gold', 'color': const Color.fromARGB(255, 191, 162, 0)},
     {'name': 'Gray', 'color': const Color.fromARGB(255, 141, 141, 133)},
     {'name': 'Green', 'color': Colors.green},
     {'name': 'Multicolored', 'color': const Color(0xFFF4F4DC)},
-    {'name': 'Off-white', 'color': const Color(0xFFF5F5DC)},
+    {'name': 'Off-white', 'color': const Color(0xFFF2F2F2)},
     {'name': 'Orange', 'color': Colors.orange},
     {'name': 'Pink', 'color': Colors.pink},
     {'name': 'Purple', 'color': Colors.purple},
@@ -437,9 +437,20 @@ class _UploadPageState extends State<UploadPage> {
                         }),
                       ),
                       title: Text(item['name']),
-                      trailing: CircleAvatar(
-                        backgroundColor: item['color'] as Color,
-                        radius: 14,
+                      trailing: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black, width: 2),
+                        ),
+                        child: CircleAvatar(
+                          backgroundColor: item['name'] == 'Multicolored'
+                              ? Colors.transparent
+                              : item['color'] as Color,
+                          backgroundImage: item['name'] == 'Multicolored'
+                              ? const AssetImage('assets/icons/multi.png')
+                              : null,
+                          radius: 14,
+                        ),
                       ),
                       onTap: () => setState(() {
                         if (isSelected) {
