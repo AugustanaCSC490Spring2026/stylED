@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/login_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:styled/history/category_pie_chart.dart';
+import 'package:styled/history/items_added_line_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,6 +20,11 @@ class _ProfilePageState extends State<ProfilePage> {
   int _daysActive = 0;
   int _totalOutfits = 0;
 
+  Map<String, int> _categoryData = {};
+
+  List<FlSpot> _addedPerMonth = [];
+  List<String> _addedDateLabels = [];
+
   @override
   void initState() {
     super.initState();
@@ -24,8 +32,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadProfileData() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user != null) {
+    final email = user.email ?? '';
+    String displayName = '';
+
+    try {
       final profileResponse = await Supabase.instance.client
         .from('profiles')
         .select('name, age')
@@ -41,38 +53,91 @@ class _ProfilePageState extends State<ProfilePage> {
       String displayName = parts.isNotEmpty
           ? parts.map((p) => p[0].toUpperCase() + p.substring(1)).join(' ')
           : namePart; */
-      final displayName = namePart;
+      String displayName = namePart;
 
-      final createdAt = user.createdAt;
-      final days = DateTime.now().difference(DateTime.parse(createdAt)).inDays;
+      if (userName != null && userName.toString().isNotEmpty) {
+        final parts = userName.toString().split('.');
+        displayName = parts
+            .map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '')
+            .join(' ')
+            .trim();
+      } else {
+        final namePart = email.split('@').first;
+        final parts = namePart.split('.');
+        displayName = parts
+            .map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '')
+            .join(' ')
+            .trim();
+      }
+    } catch (e) {
+      displayName = email.split('@').first;
+    }
 
-      try {
-        final clothesResponse = await Supabase.instance.client
-            .from('clothes')
-            .select()
-            .eq('profile_id', user.id);
-        final outfitResponse = await Supabase.instance.client
-            .from('outfits')
-            .select()
-            .eq('profile_id', user.id);
-        setState(() {
-          _totalItems = (clothesResponse as List).length;
-          _totalOutfits = (outfitResponse as List).length;
-          _email = email;
-          _displayName = displayName;
-          _daysActive = days;
-        });
-      } catch (e) {
-        // ignore
+    final createdAt = user.createdAt;
+    final days = DateTime.now().difference(DateTime.parse(createdAt)).inDays;
+
+    try {
+      final clothesResponse = await Supabase.instance.client
+          .from('clothes')
+          .select()
+          .eq('profile_id', user.id);
+      final outfitResponse = await Supabase.instance.client
+          .from('outfits')
+          .select()
+          .eq('profile_id', user.id);
+
+      Map<String, int> categoryCounts = {};
+      for (final item in clothesResponse) {
+        final category = item['category'] ?? 'Other';
+        categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
       }
 
-     /* setState(() {
+      // items added by month
+      final Map<String, int> addedByMonth = {};
+
+      for (final item in clothesResponse) {
+        final createdAt = item['created_at']?.toString();
+
+        if (createdAt != null) {
+          final monthKey = createdAt.substring(0, 7);
+
+          if (addedByMonth[monthKey] == null) {
+            addedByMonth[monthKey] = 0;
+          }
+          addedByMonth[monthKey] = addedByMonth[monthKey]! + 1;
+        }
+      }
+
+      // sort months chronologically
+      final sortedMonths = addedByMonth.keys.toList()..sort();
+
+      // convert into chart points
+      final spots = sortedMonths.asMap().entries.map((e) {
+        return FlSpot(
+          e.key.toDouble(),
+          addedByMonth[e.value]!.toDouble(),
+        );
+      }).toList();
+
+      setState(() {
+        _totalItems = (clothesResponse as List).length;
+        _totalOutfits = (outfitResponse as List).length;
+        _categoryData = categoryCounts;
         _email = email;
         _displayName = displayName;
         _daysActive = days;
-      }); */
+        _addedPerMonth = spots;
+        _addedDateLabels = sortedMonths;
+      });
+    } catch (e) {
+      setState(() {
+        _email = email;
+        _displayName = displayName;
+        _daysActive = days;
+      });
     }
   }
+}
 
   String _getInitials() {
     if (_displayName.isEmpty) return '?';
@@ -91,7 +156,6 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // Title
             Text(
               'Profile',
@@ -193,7 +257,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                 Expanded(
+                Expanded(
                   child: _ProfileStatCard(
                     value: '$_totalOutfits',
                     label: 'Outfits',
@@ -211,6 +275,61 @@ class _ProfilePageState extends State<ProfilePage> {
 
             const SizedBox(height: 24),
 
+            // Closet Analytics
+            const Text(
+              'Closet Analytics',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1a1a2e),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              child: _categoryData.isEmpty
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Text(
+                          'Add items to see your analytics!',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                      ),
+                    )
+                  : CategoryPieChart(categoryData: _categoryData),
+            ),
+            const SizedBox(height: 16),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Items Added Over Time',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1a1a2e),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: ItemsAddedLineChart(
+                dataSpot: _addedPerMonth,
+                dateLabels: _addedDateLabels,
+              ),
+            ),
+
             // Privacy & Security Section
             const Text(
               'PRIVACY & SECURITY',
@@ -223,19 +342,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 12),
 
-            _ProfileMenuItem(
-              icon: Icons.lock_outline,
-              title: 'Privacy Settings',
-              subtitle: 'Manage your data',
-              onTap: () {},
-            ),
-            const SizedBox(height: 8),
-            _ProfileMenuItem(
-              icon: Icons.download_outlined,
-              title: 'Export Data',
-              subtitle: 'Download your closet',
-              onTap: () {},
-            ),
+  
 
             const SizedBox(height: 20),
 
@@ -310,10 +417,7 @@ class _ProfileStatCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         ],
       ),
     );
@@ -373,4 +477,4 @@ class _ProfileMenuItem extends StatelessWidget {
       ),
     );
   }
-} 
+}
