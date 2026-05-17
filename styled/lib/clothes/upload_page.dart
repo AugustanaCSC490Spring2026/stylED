@@ -24,6 +24,7 @@ class _UploadPageState extends State<UploadPage> {
   DateTime? dateLastWorn;
   bool collectionOnly = false;
   bool isLoading = false;
+  bool? isTie; // null = not asked yet, true/false = user answered
 
   final List<String> types = [
     'Tops',
@@ -67,6 +68,8 @@ class _UploadPageState extends State<UploadPage> {
     super.initState();
     // Pre-fill fields if we're in edit mode
     final item = widget.existingClothingItem;
+   
+
     if (item != null) {
       nameController.text = item['name'] ?? '';
       descriptionController.text = item['description'] ?? '';
@@ -74,6 +77,7 @@ class _UploadPageState extends State<UploadPage> {
       selectedSeason = item['season'] ?? 'All Seasons';
       selectedOccasion = item['occasion'] ?? 'Formal';
       collectionOnly = item['collection_only'] ?? false;
+      isTie = item['is_tie'] as bool?; //tie identification isn't lost when coming back to edit an item
       if (item['color'] != null) {
         selectedColorNames = Set.from(
           (item['color'] as String).split(', ').where((c) => c.isNotEmpty),
@@ -225,6 +229,7 @@ class _UploadPageState extends State<UploadPage> {
       final data = {
         'name': nameController.text.trim(),
         'category': selectedType,
+        'is_tie': isTie ?? false, //assumes that an item is usually not a tie, ties have to be declared separately
         'color': selectedColorNames.join(', '),
         'season': selectedSeason,
         'occasion': selectedOccasion,
@@ -399,7 +404,13 @@ class _UploadPageState extends State<UploadPage> {
                               DropdownMenuItem(value: type, child: Text(type)),
                         )
                         .toList(),
-                    onChanged: (val) => setState(() => selectedType = val),
+                    onChanged: (val) {
+                      setState(() => selectedType = val);
+                      if (val == 'Accessories') {
+                        tieQuestionPopUp();
+                        }
+
+                    }, 
                   ),
                 ),
               ),
@@ -651,6 +662,47 @@ class _UploadPageState extends State<UploadPage> {
       ),
     );
   }
+
+   void tieQuestionPopUp() {
+    showDialog(
+    context: context,
+    barrierDismissible: true, // if you tap outside of popup you can dismiss it 
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        'Is this a tie?',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF1a1a2e),
+        ),
+      ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
+      actions: [
+        TextButton(
+          onPressed: () {
+            setState(() => isTie = false); //assumes that the accessory is not a tie, meaning that ties have to be declared to be considered such
+            Navigator.pop(context);
+          },
+          child: const Text('No', style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            setState(() => isTie = true);
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2d3561),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text('Yes', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    ),
+  );
+  }
+
 
   Widget _label(String text) {
     return Text(
