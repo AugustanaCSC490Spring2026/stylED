@@ -788,7 +788,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                             ),
                           ),
                           child: const Text(
-                            'Item Showcase',
+                            'Showcase',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
