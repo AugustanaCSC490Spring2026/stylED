@@ -213,7 +213,7 @@ class _HomeContentState extends State<_HomeContent> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
-    final isNewUser = _totalItems == 0;
+    final isNewUser = _totalItems == 0 && _categoryBreakdown.isEmpty;
 
     return SafeArea(
       child: SingleChildScrollView(
