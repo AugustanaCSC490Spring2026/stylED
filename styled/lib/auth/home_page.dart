@@ -75,6 +75,7 @@ class _HomeContentState extends State<_HomeContent> {
   int _totalOutfits = 0;
   Map<String, dynamic>? _mostWornItem;
   Map<String, int> _categoryBreakdown = {};
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -163,6 +164,9 @@ class _HomeContentState extends State<_HomeContent> {
         // ignore
       }
     }
+     
+    if (!mounted) return;
+    setState(() => _isLoading = false);
   }
 
   String _getGreeting() {
@@ -208,6 +212,7 @@ class _HomeContentState extends State<_HomeContent> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const SizedBox.shrink();
     final isNewUser = _totalItems == 0;
 
     return SafeArea(
