@@ -38,14 +38,19 @@ class _ProfilePageState extends State<ProfilePage> {
     String displayName = '';
 
     try {
+      String userName = '';
       final profileResponse = await Supabase.instance.client
           .from('profiles')
           .select('name, age')
           .eq('id', user.id)
           .single();
-          final age = profileResponse['age'] ?? 0;
+          final age = profileResponse['age'] ?? 25;
 
-      final userName = profileResponse['name'] + " (" + age.toString() + " Years Old)";
+      if (Supabase.instance.client.auth.currentUser?.id == '6cd54de7-08f0-4fce-9d56-2ee0d93e0578'){
+        userName = "Jannate" + " (" + age.toString() + " Years Old)";
+      }
+
+       userName = profileResponse['name'] + " (" + age.toString() + " Years Old)";
       
 
       if (userName != null && userName.toString().isNotEmpty) {
