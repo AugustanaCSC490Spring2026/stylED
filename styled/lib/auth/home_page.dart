@@ -510,12 +510,13 @@ class _HomeContentState extends State<_HomeContent> {
               child: ElevatedButton.icon(
                 onPressed: () => widget.onNavigate(2),
                 icon: const Icon(Icons.auto_awesome, color: Colors.white),
-                label: const Text(
+                label: Text(
                   'Open Outfit Planner',
-                  style: TextStyle(
+                  style: GoogleFonts.rockSalt(
+                    fontStyle: FontStyle.italic,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Colors.white
                   ),
                 ),
                 style: ElevatedButton.styleFrom(

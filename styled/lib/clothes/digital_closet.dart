@@ -773,7 +773,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                     Expanded(
                       child: SizedBox(
                         height: 54,
-                        child: ElevatedButton(
+                        child: ElevatedButton.icon(
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -787,9 +787,12 @@ class _DigitalClosetState extends State<DigitalCloset> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          child: const Text(
+                          icon: const Icon(Icons.stars, color: Colors.white),
+          
+                          label: Text(
                             'Showcase',
-                            style: TextStyle(
+                            style: GoogleFonts.rockSalt(
+                              fontStyle: FontStyle.italic,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,

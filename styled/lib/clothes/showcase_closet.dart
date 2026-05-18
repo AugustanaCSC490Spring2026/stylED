@@ -23,6 +23,8 @@ class _ShowcaseClosetState extends State<ShowcaseCloset> {
     allItemsController = CarouselController(initialItem: 2);
     tiesController = CarouselController(initialItem: 0);
     fetchItems();
+
+    
   }
 
   Future<void> fetchItems() async{
@@ -39,7 +41,8 @@ class _ShowcaseClosetState extends State<ShowcaseCloset> {
       .eq('profile_id', userId);
     setState(() {
       allItems = List<Map<String, dynamic>>.from(data);
-      tieCollection = allItems.where((item) => item['isTie'] == true).toList(); //items that have their isTie condition marked as true are added
+
+      tieCollection = allItems.where((item) => item['is_tie'] == true) .toList(); //items that have their isTie condition marked as true are added
       isLoading = false;
     }); 
 
