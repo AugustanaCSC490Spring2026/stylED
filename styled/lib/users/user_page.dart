@@ -23,7 +23,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   List<FlSpot> _addedPerMonth = [];
   List<String> _addedDateLabels = [];
-
+  
   @override
   void initState() {
     super.initState();
@@ -43,7 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
           .select('name, age')
           .eq('id', user.id)
           .single();
-          final age = profileResponse['age'] ?? 25;
+          final age = profileResponse['age'] ?? 21;
 
       if (Supabase.instance.client.auth.currentUser?.id == '6cd54de7-08f0-4fce-9d56-2ee0d93e0578'){
         userName = "Jannate" + " (" + age.toString() + " Years Old)";
