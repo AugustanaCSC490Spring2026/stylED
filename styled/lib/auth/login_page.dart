@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'register_page.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -52,7 +54,21 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
+
+              // StylED Logo
+              Center(
+                child: Text(
+                  'StylED',
+                  style: GoogleFonts.rockSalt(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2d3561),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 28),
 
               // Title
               const Text(
@@ -135,6 +151,37 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 28),
+              // Forgot password
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () async {
+                    final email = emailController.text.trim();
+                    if (email.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Enter your email first')),
+                      );
+                      return;
+                    }
+                    await Supabase.instance.client.auth.resetPasswordForEmail(email);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Password reset email sent!')),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    'Forgot password?',
+                    style: TextStyle(
+                      color: Color(0xFF2d3561),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
 
               // Sign In button
               SizedBox(
