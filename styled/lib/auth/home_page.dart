@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:styled/clothes/showcase_closet.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../clothes/digital_closet.dart';
 import '../users/user_page.dart';
@@ -6,6 +7,7 @@ import '../history/history_page.dart';
 import 'login_page.dart';
 import '../outfits/outfit_generator_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../clothes/showcase_closet.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,18 +18,34 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
+  int _plannerMode = 0;
+  bool _calendarOpen = false;
 
-  void _navigateTo(int index) {
+  void _navigateTo(int index) {          
     setState(() => _currentIndex = index);
+  }
+
+  void _navigateWithMode(int index, {int mode = 0}) {
+    setState(() {
+      _plannerMode = mode;
+      _currentIndex = index;
+  });
+  }
+
+  void _navigateToCalendar() { 
+    setState(() {
+      _calendarOpen = true;
+      _currentIndex = 3;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final pages = [
-      _HomeContent(onNavigate: _navigateTo),
+      _HomeContent(onNavigate: _navigateTo, onNavigateWithMode: _navigateWithMode, onNavigateToCalendar: _navigateToCalendar,),
       const DigitalCloset(),
-      const OutfitGeneratorPage(),
-      const HistoryPage(),
+      OutfitGeneratorPage(initialMode: _plannerMode),
+      HistoryPage(initialCalendarOpen: _calendarOpen),
       const ProfilePage(),
     ];
 
@@ -41,7 +59,10 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Colors.white,
           selectedItemColor: const Color(0xFF2d3561),
           unselectedItemColor: Colors.grey,
-          onTap: (index) => setState(() => _currentIndex = index),
+          onTap: (index) => setState(() { 
+            _currentIndex = index;
+            _calendarOpen = false;
+  }),
           type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -62,8 +83,10 @@ class _HomePageState extends State<HomePage> {
 
 class _HomeContent extends StatefulWidget {
   final void Function(int index) onNavigate;
+  final void Function(int index, {int mode}) onNavigateWithMode;
+  final VoidCallback onNavigateToCalendar;
 
-  const _HomeContent({required this.onNavigate});
+  const _HomeContent({required this.onNavigate, required this.onNavigateWithMode, required this.onNavigateToCalendar,});
 
   @override
   State<_HomeContent> createState() => _HomeContentState();
@@ -222,7 +245,7 @@ class _HomeContentState extends State<_HomeContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            // ── Greeting ──────────────────────────────────────────────
+            // Greeting 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,7 +277,7 @@ class _HomeContentState extends State<_HomeContent> {
 
             const SizedBox(height: 20),
 
-            // ── Get Started Banner (only for new users) ───────────────
+            // Get Started Banner (only for new users) 
             if (isNewUser) ...[
               Container(
                 width: double.infinity,
@@ -312,7 +335,7 @@ class _HomeContentState extends State<_HomeContent> {
               const SizedBox(height: 20),
             ],
 
-            // ── Quick Actions ─────────────────────────────────────────
+            // Quick Actions 
             if (!isNewUser) ...[
               const Text(
                 'Quick Actions',
@@ -328,27 +351,34 @@ class _HomeContentState extends State<_HomeContent> {
                   Expanded(
                     child: _QuickActionCard(
                       icon: Icons.checkroom,
-                      label: 'My Closet',
+                      label: 'Showcase',
                       subtitle: '$_totalItems items',
-                      onTap: () => widget.onNavigate(1),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ShowcaseCloset()),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _QuickActionCard(
                       icon: Icons.auto_awesome,
-                      label: 'Plan Outfit',
+                      label: 'Build Outfit',
                       subtitle: 'AI powered',
-                      onTap: () => widget.onNavigate(2),
-                    ),
-                  ),
+                      onTap: () => widget.onNavigateWithMode(2, mode: 2),
+                        
+
+                        ),
+                      ),
+                    
+                  
                   const SizedBox(width: 10),
                   Expanded(
                     child: _QuickActionCard(
-                      icon: Icons.history,
-                      label: 'History',
+                      icon: Icons.calendar_month,
+                      label: 'Calendar',
                       subtitle: '$_totalOutfits this month',
-                      onTap: () => widget.onNavigate(3),
+                      onTap: () => widget.onNavigateToCalendar(),
                     ),
                   ),
                 ],
@@ -356,7 +386,7 @@ class _HomeContentState extends State<_HomeContent> {
               const SizedBox(height: 20),
             ],
 
-            // ── Stats Row ─────────────────────────────────────────────
+            //  Stats Row 
             if (!isNewUser) ...[
               Row(
                 children: [
@@ -378,7 +408,7 @@ class _HomeContentState extends State<_HomeContent> {
               const SizedBox(height: 12),
             ],
 
-            // ── Most Worn Item ────────────────────────────────────────
+            //  Most Worn Item 
             if (!isNewUser) ...[
               Container(
                 width: double.infinity,
@@ -443,7 +473,7 @@ class _HomeContentState extends State<_HomeContent> {
               const SizedBox(height: 12),
             ],
 
-            // ── Closet Breakdown (real data) ──────────────────────────
+            //  Closet Breakdown (real data) 
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -551,7 +581,7 @@ class _HomeContentState extends State<_HomeContent> {
   }
 }
 
-// ── Quick Action Card ─────────────────────────────────────────────────────────
+// Quick Action Card 
 
 class _QuickActionCard extends StatelessWidget {
   final IconData icon;
@@ -608,7 +638,7 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
+//  Stat Card 
 
 class _StatCard extends StatelessWidget {
   final String value;
@@ -647,7 +677,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── Breakdown Row ─────────────────────────────────────────────────────────────
+//  Breakdown Row 
 
 class _BreakdownRow extends StatelessWidget {
   final String label;

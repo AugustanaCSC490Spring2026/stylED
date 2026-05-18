@@ -6,7 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class OutfitGeneratorPage extends StatefulWidget {
-  const OutfitGeneratorPage({super.key});
+  final int initialMode;
+  const OutfitGeneratorPage({super.key, this.initialMode = 0});
 
   @override
   State<OutfitGeneratorPage> createState() => _OutfitGeneratorPageState();
@@ -33,6 +34,7 @@ class _OutfitGeneratorPageState extends State<OutfitGeneratorPage> {
   @override
   void initState() {
     super.initState();
+    mode = widget.initialMode;
     fetchCloset();
   }
 

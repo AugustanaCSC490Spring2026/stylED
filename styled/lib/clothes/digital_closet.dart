@@ -309,10 +309,7 @@ class _DigitalClosetState extends State<DigitalCloset> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    ElevatedButton(
-                      child: const Text('Close'),
-                      onPressed: () => Navigator.pop(context, false),
-                    ),
+                    
                     ElevatedButton(
                       child: const Text('Clear'),
                       onPressed: () => setSheetState(() => tempChosenOptions.clear()),

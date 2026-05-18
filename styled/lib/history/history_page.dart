@@ -4,7 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HistoryPage extends StatefulWidget {
-  const HistoryPage({super.key});
+  final bool initialCalendarOpen;
+  const HistoryPage({super.key, this.initialCalendarOpen = false});
 
   @override
   State<HistoryPage> createState() => _HistoryPageState();
@@ -35,6 +36,7 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   void initState() {
     super.initState();
+    _calendarOpen = widget.initialCalendarOpen;
     _loadData();
   }
 
