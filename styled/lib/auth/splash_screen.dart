@@ -19,7 +19,7 @@ void initState() {
     
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive); //get rid of top and bottom bar
-    Future.delayed(Duration(seconds: 4),() {
+    Future.delayed(const Duration(milliseconds: 2500),() {
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()
       ));
     }); //Set timer to take us from splash screen to login
@@ -35,12 +35,7 @@ void initState() {
     return Scaffold(
       body: Container(
         width: double.infinity, //as big as possible
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [Colors.blueAccent, Colors.deepPurpleAccent, Colors.lightBlueAccent, Colors.deepPurple],
-          begin:Alignment.topRight,
-          end: Alignment.bottomLeft,
-          )
-        ),
+        color: const Color(0xFF2d3561),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center, //center logo + name
           children: [
@@ -60,8 +55,7 @@ void initState() {
 
             )),
             SizedBox(height: 8), //sepator
-            Text('Your closet. Reimagined.', style: GoogleFonts.audiowide(
-              fontStyle: FontStyle.normal,
+            Text('Your closet. Reimagined.', style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.w300,
