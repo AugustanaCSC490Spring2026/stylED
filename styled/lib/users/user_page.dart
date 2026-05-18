@@ -397,8 +397,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
 
             const SizedBox(height: 20),
-
-          
             // Private closet banner
             Container(
               width: double.infinity,
